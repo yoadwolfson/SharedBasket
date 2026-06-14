@@ -26,8 +26,13 @@ Tools used in this phase are Spring Boot WebSocket support or equivalent real-ti
 - Review logging, response consistency, and performance bottlenecks.
 
 ## Work split
-- Developer B owns the real-time UI behavior, remaining JSF integration, and visual polish.
-- Developer A owns the WebSocket or messaging backend, consistency rules, security review, and final server-side validation.
+- Both Developer A and Developer B work full-stack on real-time sync, integration, and hardening.
+- Phase Lead: Developer B — Co-Lead: Developer A.
+- Sub-stage ownership:
+	- 6.1 Real-time collaboration: Lead Developer B (client sync, UI subscriptions), Co-Lead Developer A (WebSocket/messaging endpoints and server events).
+	- 6.2 Conflict prevention and consistency: Lead Developer A (final concurrency safeguards), Co-Lead Developer B (frontend conflict UX and auto-refresh behavior).
+	- 6.3 Full frontend completion: Lead Developer B (final UI wiring), Co-Lead Developer A (endpoint verification and contract tests).
+	- 6.4 Testing and hardening: Joint; Developer A leads security/performance checks, Developer B leads UI/UX regression and integration tests.
 
 ## Control checks
 - Multiple users see shopping list changes in real time.

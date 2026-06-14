@@ -26,8 +26,13 @@ Tools used in this phase are Spring MVC REST endpoints, Spring Data JPA, Hiberna
 - Present summary cards, charts, and history tables using the REST outputs.
 
 ## Work split
-- Developer A owns the analytics services, purchase history persistence, recommendation logic, and reporting endpoints.
-- Developer B owns the dashboard and report UI, chart display, and frontend data presentation.
+- Both Developer A and Developer B work full-stack on analytics, history, and recommendations.
+- Phase Lead: Developer A — Co-Lead: Developer B.
+- Sub-stage ownership:
+	- 5.1 Purchase history: Lead Developer A (persistence and schema), Co-Lead Developer B (UI for viewing history).
+	- 5.2 Expense reporting: Joint; Developer A leads aggregation and endpoints, Developer B leads dashboard design and chart integration.
+	- 5.3 Recommendation engine: Lead Developer A (service algorithms), Co-Lead Developer B (presentation and quick-list rebuild UX).
+	- 5.4 Frontend dashboards: Developer B leads visual polish, Developer A provides test datasets and verifies calculations.
 
 ## Control checks
 - Purchase history is written only for completed purchases.

@@ -3,31 +3,37 @@
 This plan keeps the required stack unchanged: Java, Spring Boot, Spring MVC, Spring Data JPA, Hibernate, Spring Security, REST API, JSF, HTML, CSS, JavaScript, and PostgreSQL.
 
 ## Team Split Rules
-- Developer A focuses on backend architecture, domain logic, security, persistence, concurrency, analytics, and integration contracts.
-- Developer B focuses on JSF pages, client-side interaction, form flow, UI authorization states, and frontend integration with the REST APIs.
-- Each phase has one primary owner and one support owner.
-- No phase should start without the previous phase's contract being clear, even if parts can be built in parallel.
-- Backend must expose stable REST endpoints before the JSF layer depends on them.
+- Both Developer A and Developer B work as full-stack engineers.
+- Work is split by exclusive feature ownership, not by layer and not by shared feature implementation.
+- Each feature owner implements the feature end to end: REST API, service logic, persistence, validation, and the matching JSF screen.
+- The non-owner only reviews contracts, tests the integration, and implements downstream dependent work.
+- No feature should be built by both developers at the same time.
+- Start each feature with an agreed API contract, then implement backend and JSF together under one owner.
 
-## Phase Overview
-| Phase | Main Goal | Primary Owner | Support Owner | Control Point |
-|---|---|---|---|---|
-| Phase 1 | Foundation, architecture, project setup, base entities, shared contracts | Developer A | Developer B | Project compiles, packages, and exposes agreed API/model skeleton |
-| Phase 2 | Authentication and user profile management | Developer A | Developer B | Registration, login, and profile flow works end to end |
-| Phase 3 | Groups, invitations, join requests, and role control | Developer A | Developer B | Admin/member permissions and membership flows are enforced |
-| Phase 4 | Categories and shopping item management | Developer B | Developer A | Shopping list CRUD works with validation and concurrency rules |
-| Phase 5 | Purchase history, expense tracking, analytics, and recommendations | Developer A | Developer B | Reports and recommendation endpoints return stored-data results |
-| Phase 6 | Real-time synchronization, frontend integration, testing, and hardening | Developer B | Developer A | Multi-user editing is synchronized and the full app is verified |
+## Feature Ownership
+| Phase | Feature Area | Owner | What the Owner Delivers |
+|---|---|---|---|
+| Phase 1 | Core platform foundation | Developer A | Spring Boot setup, package structure, PostgreSQL config, base entities, DTOs, validation, and shared exception handling |
+| Phase 1 | JSF application shell and navigation | Developer B | Page templates, navigation, layout, shared UI components, and frontend contract handling |
+| Phase 2 | Authentication and profile management | Developer A | Registration, login, security, password hashing, profile APIs, and the matching JSF screens |
+| Phase 3 | Group creation and membership management | Developer B | Group CRUD, invitation codes, join requests, approval/rejection flow, member removal, and group-admin screens |
+| Phase 4 | Categories and shopping items | Developer A | Category CRUD, shopping item CRUD, purchased state, quantities, prices, and the matching JSF shopping screens |
+| Phase 5 | Purchase history and reporting | Developer A | Purchase persistence, spending reports, history APIs, analytics services, and report screens |
+| Phase 5 | Recommendations | Developer B | Recommendation engine, suggestion APIs, basket rebuild support, and recommendation UI |
+| Phase 6 | Real-time collaboration | Developer B | Live updates, client refresh behavior, WebSocket or messaging UI integration, and conflict presentation |
 
 ## Execution Order
-1. Build the foundation and shared contracts first.
-2. Lock authentication before adding group permissions.
-3. Finish group membership before product operations.
-4. Finish product operations before analytics and recommendations.
-5. Add real-time sync and then validate the full system end to end.
+1. Build the core platform foundation.
+2. Deliver authentication and profile management.
+3. Deliver group creation and membership management.
+4. Build the JSF shell in parallel with the backend features that depend on it.
+5. Build categories and shopping items.
+6. Build purchase history and reporting.
+7. Build recommendations.
+8. Add real-time collaboration and finish with full-system verification.
 
 ## Acceptance Criteria For The Whole Plan
-- The architecture remains layered and clean.
+- Every feature has one owner and one implementation path.
 - Business logic stays in services.
 - Controllers only validate and delegate.
 - Repositories only persist data.

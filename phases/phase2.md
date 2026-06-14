@@ -15,7 +15,7 @@ Tools used in this phase are Spring Security, Spring MVC REST endpoints, Spring 
 - Configure authentication and authorization entry points.
 - Return stable responses for the frontend to consume.
 
-### 2.3 Profile management
+### 2.3 Profile management (wont be used)
 - Add profile retrieval and profile update operations.
 - Allow users to view and update allowed identity fields.
 - Keep password updates separate from profile updates.
@@ -26,8 +26,13 @@ Tools used in this phase are Spring Security, Spring MVC REST endpoints, Spring 
 - Show validation and authorization messages clearly.
 
 ## Work split
-- Developer A owns the Spring Security configuration, authentication service, password hashing, and REST endpoints.
-- Developer B owns the JSF authentication screens, form validation display, and frontend state handling.
+- Both Developer A and Developer B work full-stack on authentication and profiles.
+- Phase Lead: Developer B — Co-Lead: Developer A.
+- Sub-stage ownership:
+	- 2.1 Registration flow: Lead Developer B (frontend UX and validation), Co-Lead Developer A (secure persistence and hashing).
+	- 2.2 Login and session handling: Lead Developer A (security configuration), Co-Lead Developer B (JSF login/session UX).
+	- 2.3 Profile management: Joint; Developer A leads backend DTOs and rules, Developer B leads profile UI.
+	- 2.4 Frontend integration: Developer B leads integration, Developer A provides test endpoints and mocks when needed.
 
 ## Control checks
 - A new user can register successfully.

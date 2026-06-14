@@ -26,8 +26,13 @@ Tools used in this phase are Java, Spring Boot, Spring MVC, Spring Data JPA, Hib
 - Prepare the base security configuration without completing authentication flows yet.
 
 ## Work split
-- Developer A owns the backend project skeleton, entity model, repository interfaces, exception handling, and API contract definition.
-- Developer B owns the JSF shell, base page templates, styling foundation, and alignment of frontend views with the API contract.
+- Both Developer A and Developer B work full-stack on this phase.
+- Phase Lead: Developer A — Co-Lead: Developer B.
+- Sub-stage ownership:
+	- 1.1 Project setup: Lead Developer A, Co-Lead Developer B (frontend project shell, build alignment).
+	- 1.2 Domain skeleton: Lead Developer A, Co-Lead Developer B (entity review and DTO alignment).
+	- 1.3 API contract foundation: Joint design; Developer A leads endpoints, Developer B leads example UI contracts.
+	- 1.4 Shared quality base: Joint implementation; Developer B leads JSF shell checks and Developer A leads security/validation plumbing.
 
 ## Control checks
 - The application starts cleanly.

@@ -25,8 +25,13 @@ Tools used in this phase are Spring MVC REST APIs, Spring Data JPA, Hibernate, J
 - Show live validation and conflict messages in the UI.
 
 ## Work split
-- Developer B owns the shopping list JSF screens, category forms, item editing UI, and user interaction flow.
-- Developer A owns the backend category and item services, repository logic, and concurrency rules.
+- Both Developer A and Developer B work full-stack on categories and shopping items.
+- Phase Lead: Developer B — Co-Lead: Developer A.
+- Sub-stage ownership:
+	- 4.1 Category management: Lead Developer B (category UI and UX), Co-Lead Developer A (repository and unique constraints).
+	- 4.2 Shopping item CRUD: Joint; Developer A leads service-side invariants and persistence, Developer B leads item editing UX and client flows.
+	- 4.3 Concurrency control: Lead Developer A (optimistic locking and conflict APIs), Co-Lead Developer B (conflict UI and retry flow).
+	- 4.4 Frontend integration: Developer B leads final JSF interactions, Developer A provides integration tests and example API responses.
 
 ## Control checks
 - Categories can be managed without coupling them to a single product.

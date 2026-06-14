@@ -26,8 +26,13 @@ Tools used in this phase are Spring MVC REST endpoints, Spring Data JPA, Hiberna
 - Add UI states for pending, accepted, rejected, and unauthorized actions.
 
 ## Work split
-- Developer A owns the backend group, membership, invitation, and authorization logic.
-- Developer B owns the JSF group management views and permission-aware UI behavior.
+- Both Developer A and Developer B work full-stack on groups and membership.
+- Phase Lead: Developer A — Co-Lead: Developer B.
+- Sub-stage ownership:
+	- 3.1 Group creation and settings: Lead Developer A (backend model, invitation code logic), Co-Lead Developer B (group UI and settings pages).
+	- 3.2 Membership lifecycle: Joint; Developer B leads join-request UI flows, Developer A leads backend state transitions.
+	- 3.3 Role enforcement: Lead Developer A (authorization rules), Co-Lead Developer B (UI permission visibility and guards).
+	- 3.4 Frontend integration: Developer B leads implementation, Developer A validates endpoints and provides test data.
 
 ## Control checks
 - A user can create a group and join it with the correct flow.
