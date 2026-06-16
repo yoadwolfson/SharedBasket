@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<ui:composition template="/WEB-INF/templates/layouts/base-layout.xhtml">
+    <ui:param name="pageTitle">Dashboard - Shared Basket</ui:param>
+
+    <ui:define name="additionalStyles">
+        <h:outputStylesheet library="css" name="dashboard.css" />
+    </ui:define>
+
+    <ui:define name="content">
+        <div class="sb-dashboard-container">
+            <h2 class="sb-page-title">Dashboard</h2>
+
+            <div class="sb-dashboard-grid">
+                <div class="sb-widget sb-shopping-widget">
+                    <h3 class="sb-widget-title">Active Shopping List</h3>
+                    <div class="sb-widget-content">
+                        <p class="sb-placeholder-text">Loading shopping list items...</p>
+                        <h:panelGroup layout="block" rendered="#{not empty dashboardController.shoppingItems}">
+                            <ul class="sb-item-list">
+                                <ui:repeat var="item" value="#{dashboardController.shoppingItems}">
+                                    <li class="sb-item">
+                                        <span class="sb-item-name">#{item.name}</span>
+                                        <span class="sb-item-quantity">x#{item.quantity}</span>
+                                        <span class="sb-item-price">$#{item.estimatedPrice}</span>
+                                    </li>
+                                </ui:repeat>
+                            </ul>
+                        </h:panelGroup>
+                    </div>
+                    <h:form>
+                        <h:commandLink value="View Full List →" action="#{dashboardController.goToShoppingList}" styleClass="sb-widget-link" />
+                    </h:form>
+                </div>
+
+                <div class="sb-widget sb-stats-widget">
+                    <h3 class="sb-widget-title">Statistics Summary</h3>
+                    <div class="sb-widget-content">
+                        <p class="sb-placeholder-text">Loading statistics...</p>
+                        <h:panelGroup layout="block" rendered="#{not empty dashboardController.statistics}" styleClass="sb-stats-grid">
+                            <div class="sb-stat-item">
+                                <span class="sb-stat-label">Total Items</span>
+                                <span class="sb-stat-value">#{dashboardController.statistics.totalItems}</span>
+                            </div>
+                            <div class="sb-stat-item">
+                                <span class="sb-stat-label">Total Cost</span>
+                                <span class="sb-stat-value">$#{dashboardController.statistics.totalCost}</span>
+                            </div>
+                            <div class="sb-stat-item">
+                                <span class="sb-stat-label">Items Purchased</span>
+                                <span class="sb-stat-value">#{dashboardController.statistics.itemsPurchased}</span>
+                            </div>
+                        </h:panelGroup>
+                    </div>
+                    <h:form>
+                        <h:commandLink value="View Reports →" action="#{dashboardController.goToReports}" styleClass="sb-widget-link" />
+                    </h:form>
+                </div>
+
+                <div class="sb-widget sb-recommendations-widget">
+                    <h3 class="sb-widget-title">Recommended Items</h3>
+                    <div class="sb-widget-content">
+                        <p class="sb-placeholder-text">Loading recommendations...</p>
+                        <h:panelGroup layout="block" rendered="#{not empty dashboardController.recommendations}" styleClass="sb-recommendations-list">
+                            <ui:repeat var="rec" value="#{dashboardController.recommendations}">
+                                <div class="sb-recommendation-item">
+                                    <span class="sb-rec-item-name">#{rec.itemName}</span>
+                                    <span class="sb-rec-category">#{rec.category}</span>
+                                    <span class="sb-rec-frequency">Frequency: #{rec.frequency}</span>
+                                </div>
+                            </ui:repeat>
+                        </h:panelGroup>
+                    </div>
+                    <h:form>
+                        <h:commandLink value="View All Recommendations →" action="#{dashboardController.goToRecommendations}" styleClass="sb-widget-link" />
+                    </h:form>
+                </div>
+
+                <div class="sb-widget sb-actions-widget">
+                    <h3 class="sb-widget-title">Quick Actions</h3>
+                    <div class="sb-widget-content">
+                        <h:form>
+                            <div class="sb-action-buttons">
+                                <h:commandButton value="Add Item to List" action="#{dashboardController.addItemToList}" styleClass="sb-btn sb-btn-primary" />
+                                <h:commandButton value="Create Group" action="#{dashboardController.goToGroups}" styleClass="sb-btn sb-btn-secondary" />
+                                <h:commandButton value="Join Group" action="#{dashboardController.goToGroups}" styleClass="sb-btn sb-btn-secondary" />
+                            </div>
+                        </h:form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ui:define>
+
+    <ui:define name="additionalScripts">
+        <h:outputScript library="js" name="dashboard.js" />
+    </ui:define>
+</ui:composition>
+
+</html>

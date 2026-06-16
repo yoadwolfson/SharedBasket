@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<ui:composition>
+    <!-- Header Fragment for Shared Basket Application Shell
+         This fragment renders the top application header including branding,
+         user session display, and quick actions. -->
+    
+    <header class="sb-header">
+        <div class="sb-header-container">
+            <!-- Brand/Logo Section -->
+            <div class="sb-header-brand">
+                <h1 class="sb-app-title">
+                    <h:outputLink value="#{request.contextPath}/index.jsf" 
+                                   styleClass="sb-brand-link">
+                        🛒 Shared Basket
+                    </h:outputLink>
+                </h1>
+            </div>
+            
+            <!-- Header Right Section: User Info & Actions -->
+            <div class="sb-header-right">
+                <!-- DEV-A Connection Point: User Session Display -->
+                <!-- @DevAConnection Provider=DeveloperA, Service=AuthenticationService, Type=UserSessionDisplay
+                     Context: Display authenticated user information and profile.
+                     Integration: Bind to managed bean exposing current user from Developer A's authentication context.
+                     Expected: UserDTO with id, email, fullName properties from Developer A. -->
+                
+                <div class="sb-user-info">
+                    <span class="sb-user-email">Guest user</span>
+                    <span class="sb-user-name">(waiting for Developer A session)</span>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="sb-header-actions">
+                    <h:form>
+                        <h:commandLink value="Profile" 
+                                       action="#{shellController.navigateToProfile}"
+                                       styleClass="sb-header-action-link" />
+                        <span class="sb-action-separator">|</span>
+                        <h:commandLink value="Logout" 
+                                       action="#{shellController.logout}"
+                                       styleClass="sb-header-action-link sb-logout-link" />
+                    </h:form>
+                </div>
+            </div>
+        </div>
+    </header>
+</ui:composition>
+
+</html>

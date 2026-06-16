@@ -1,0 +1,152 @@
+package com.sharedbasket.controller;
+
+import com.sharedbasket.dto.AlertDTO;
+import com.sharedbasket.dto.UserDTO;
+import com.sharedbasket.service.AuthenticationService;
+import javax.annotation.PostConstruct;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
+import javax.faces.context.FacesContext;
+import javax.inject.Inject;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Shell Controller for Shared Basket Application
+ * 
+ * Manages global application state, navigation, and alert display.
+ * This controller is session-scoped and responsible for:
+ * - Coordinating authentication state with Developer A's authentication service
+ * - Managing global alerts and notifications
+ * - Providing common navigation actions
+ * - Maintaining shell-level state
+ * 
+ * DEV-A Connection Points:
+ * @DevAConnection Provider=DeveloperA, Service=AuthenticationService, Type=Dependency
+ *                Context: Shell depends on Developer A's AuthenticationService for session management.
+ *                Integration: Injected AuthenticationService from Developer A's module.
+ */
+@ManagedBean(name = "shellController")
+@SessionScoped
+public class ShellController implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
+    
+    // DEV-A Connection: Injected from Developer A's authentication module
+    @Inject
+    private AuthenticationService authenticationService;
+    
+    private List<AlertDTO> applicationAlerts;
+    private UserDTO currentUser;
+    
+    @PostConstruct
+    public void init() {
+        this.applicationAlerts = new ArrayList<>();
+        initializeCurrentUser();
+    }
+    
+    /**
+     * Initialize current user from Developer A's session.
+     * 
+     * DEV-A Connection Point:
+     * @DevAConnection Provider=DeveloperA, Service=AuthenticationService, Type=UserRetrieval
+     *                Expected: getCurrentUser() returns UserDTO with id, email, fullName, role properties.
+     */
+    private void initializeCurrentUser() {
+        try {
+            this.currentUser = authenticationService.getCurrentUser();
+            if (currentUser == null) {
+                redirectToLogin();
+            }
+        } catch (Exception e) {
+            addErrorAlert("Failed to load user information. Please refresh the page.");
+        }
+    }
+    
+    /**
+     * Add an application-level alert message.
+     * 
+     * @param message Alert message to display
+     */
+    public void addSuccessAlert(String message) {
+        applicationAlerts.add(new AlertDTO("success", message));
+    }
+    
+    public void addErrorAlert(String message) {
+        applicationAlerts.add(new AlertDTO("error", message));
+    }
+    
+    public void addWarningAlert(String message) {
+        applicationAlerts.add(new AlertDTO("warning", message));
+    }
+    
+    public void addInfoAlert(String message) {
+        applicationAlerts.add(new AlertDTO("info", message));
+    }
+    
+    /**
+     * Clear all application alerts.
+     */
+    public void clearAlerts() {
+        applicationAlerts.clear();
+    }
+    
+    /**
+     * Navigate to user profile.
+     */
+    public String navigateToProfile() {
+        return "redirect:/profile.jsf";
+    }
+    
+    /**
+     * Logout user.
+     * 
+     * DEV-A Connection Point:
+     * @DevAConnection Provider=DeveloperA, Service=AuthenticationService, Type=LogoutOperation
+     *                Context: Delegates logout to Developer A's authentication service.
+     *                Expected: logout() clears session and returns authentication status.
+     */
+    public String logout() {
+        try {
+            authenticationService.logout();
+            clearAlerts();
+            return "redirect:/login.jsf";
+        } catch (Exception e) {
+            addErrorAlert("Error during logout: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Redirect to login page when user is not authenticated.
+     */
+    private void redirectToLogin() {
+        try {
+            FacesContext.getCurrentInstance().getExternalContext().redirect(
+                FacesContext.getCurrentInstance().getExternalContext().getRequestContextPath() 
+                + "/login.jsf"
+            );
+        } catch (Exception e) {
+            // Log error but continue
+        }
+    }
+    
+    // ==================== Getters & Setters ====================
+    
+    public List<AlertDTO> getApplicationAlerts() {
+        return applicationAlerts;
+    }
+    
+    public void setApplicationAlerts(List<AlertDTO> applicationAlerts) {
+        this.applicationAlerts = applicationAlerts;
+    }
+    
+    public UserDTO getCurrentUser() {
+        return currentUser;
+    }
+    
+    public void setCurrentUser(UserDTO currentUser) {
+        this.currentUser = currentUser;
+    }
+}

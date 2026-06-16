@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faces-config xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+              http://xmlns.jcp.org/xml/ns/javaee/web-facesconfig_2_3.xsd"
+              version="2.3">
+    
+    <!-- Application Configuration -->
+    <application>
+        <locale-config>
+            <default-locale>en</default-locale>
+            <supported-locale>en</supported-locale>
+            <supported-locale>he</supported-locale>
+        </locale-config>
+        
+        <!-- Message Bundle for Localization -->
+        <resource-bundle>
+            <base-name>com.sharedbasket.messages</base-name>
+            <var>msg</var>
+        </resource-bundle>
+    </application>
+    
+    <!-- Managed Beans (if not using annotation-based configuration) -->
+    <!-- Note: Using @ManagedBean annotations in controllers instead -->
+    
+    <!-- Navigation Rules -->
+    <navigation-rule>
+        <from-view-id>*</from-view-id>
+        <navigation-case>
+            <from-action>#{shellController.logout}</from-action>
+            <from-outcome>redirect</from-outcome>
+            <to-view-id>/login.jsf</to-view-id>
+        </navigation-case>
+    </navigation-rule>
+    
+    <!-- Factory Configuration for Custom Implementations -->
+    <!-- Placeholder for custom exception handlers, phase listeners, etc. -->
+    
+</faces-config>
