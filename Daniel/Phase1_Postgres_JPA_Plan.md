@@ -47,9 +47,9 @@ Option A (environment variable for current session):
 $env:SPRING_PROFILES_ACTIVE='dev'
 mvn spring-boot:run
 
-Option B (maven property):
+Option B (PowerShell-safe one-liner):
 
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
+mvn --% spring-boot:run -Dspring-boot.run.profiles=dev
 
 What to expect (verification)
 - Flyway logs showing application of `V1__initial_schema.sql` and creation of `flyway_schema_history`.

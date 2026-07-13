@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: sharedbasket
+      POSTGRES_PASSWORD: sharedbasket
+      POSTGRES_DB: sharedbasket_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U sharedbasket" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/sharedbasket_dev
+      SPRING_DATASOURCE_USERNAME: sharedbasket
+      SPRING_DATASOURCE_PASSWORD: sharedbasket
+    ports:
+      - "8081:8081"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:
+    name: sharedbasket_db_data
