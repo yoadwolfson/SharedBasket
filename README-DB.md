@@ -1,4 +1,4 @@
-Local database for development
+# Local database for development
 
 The dev database is configured for PostgreSQL running in Docker. The app uses the
 settings from src/main/resources/application-dev.properties:
@@ -23,9 +23,6 @@ settings from src/main/resources/application-dev.properties:
    If you prefer a one-liner in PowerShell, use:
 
    mvn --% spring-boot:run -Dspring-boot.run.profiles=dev
-
-   The app now runs on port 8081, so it no longer conflicts with common local
-   services on 8080.
 
    If Docker Compose is already running an older app container, recreate it so
    it picks up the new port mapping:
