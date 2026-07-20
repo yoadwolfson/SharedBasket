@@ -3,11 +3,14 @@ package com.sharedbasket.controller;
 import com.sharedbasket.dto.AlertDTO;
 import com.sharedbasket.dto.UserDTO;
 import com.sharedbasket.service.AuthenticationService;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
+import javax.servlet.ServletContext;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +36,6 @@ public class ShellController implements Serializable {
     
     private static final long serialVersionUID = 1L;
     
-    // DEV-A Connection: Injected from Developer A's authentication module
-    @Inject
     private AuthenticationService authenticationService;
     
     private List<AlertDTO> applicationAlerts;
@@ -43,6 +44,7 @@ public class ShellController implements Serializable {
     @PostConstruct
     public void init() {
         this.applicationAlerts = new ArrayList<>();
+        this.authenticationService = resolveSpringBean(AuthenticationService.class);
         initializeCurrentUser();
     }
     
@@ -125,11 +127,23 @@ public class ShellController implements Serializable {
         try {
             FacesContext.getCurrentInstance().getExternalContext().redirect(
                 FacesContext.getCurrentInstance().getExternalContext().getRequestContextPath() 
-                + "/login.jsf"
+                + "/login.xhtml"
             );
         } catch (Exception e) {
             // Log error but continue
         }
+    }
+
+    private <T> T resolveSpringBean(Class<T> beanType) {
+        FacesContext facesContext = FacesContext.getCurrentInstance();
+        if (facesContext == null) {
+            throw new IllegalStateException("FacesContext is not available");
+        }
+
+        ServletContext servletContext = (ServletContext) facesContext.getExternalContext().getContext();
+        WebApplicationContext applicationContext =
+            WebApplicationContextUtils.getRequiredWebApplicationContext(servletContext);
+        return applicationContext.getBean(beanType);
     }
     
     // ==================== Getters & Setters ====================

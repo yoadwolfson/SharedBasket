@@ -75,17 +75,17 @@
     <!-- Error Pages -->
     <error-page>
         <error-code>404</error-code>
-        <location>/WEB-INF/error-pages/404.jsf</location>
+        <location>/WEB-INF/error-pages/404.xhtml</location>
     </error-page>
     
     <error-page>
         <error-code>500</error-code>
-        <location>/WEB-INF/error-pages/500.jsf</location>
+        <location>/WEB-INF/error-pages/500.xhtml</location>
     </error-page>
     
     <error-page>
         <exception-type>javax.faces.application.ViewExpiredException</exception-type>
-        <location>/login.jsf</location>
+        <location>/login.xhtml</location>
     </error-page>
     
 </web-app>

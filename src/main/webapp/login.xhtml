@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+
+<ui:composition template="/WEB-INF/templates/layouts/base-layout.xhtml">
+    <ui:param name="pageTitle" value="Login - Shared Basket" />
+
+    <ui:define name="content">
+        <div class="sb-login-container">
+            <h2 class="sb-page-title">Login</h2>
+            <div class="sb-widget">
+                <p class="sb-placeholder-text">Development mode is active. Authentication is provided by the local dev fallback service.</p>
+                <h:outputLink value="#{request.contextPath}/dashboard.xhtml" styleClass="sb-btn sb-btn-primary">
+                    Continue to Dashboard
+                </h:outputLink>
+            </div>
+        </div>
+    </ui:define>
+</ui:composition>
+
+</html>
