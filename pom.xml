@@ -55,6 +55,7 @@
             <artifactId>jsf-impl</artifactId>
             <version>2.2.20</version>
         </dependency>
+
             <!-- CDI Injection -->
             <dependency>
                 <groupId>javax.inject</groupId>
@@ -81,6 +82,13 @@
         </dependency>
         
         <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.1.214</version>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>4.0.1</version>
@@ -92,6 +100,11 @@
             <artifactId>jsp-api</artifactId>
             <version>2.2</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-jasper</artifactId>
         </dependency>
         
         <dependency>

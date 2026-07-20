@@ -48,10 +48,10 @@ public class DashboardController implements Serializable {
         addSuccessAlert("Item added to shopping list");
     }
 
-    public String goToShoppingList() { return "/WEB-INF/views/shopping-list.xhtml?faces-redirect=false"; }
-    public String goToReports() { return "/WEB-INF/views/reports.xhtml?faces-redirect=false"; }
-    public String goToRecommendations() { return "/WEB-INF/views/recommendations.xhtml?faces-redirect=false"; }
-    public String goToGroups() { return "/WEB-INF/views/groups.xhtml?faces-redirect=false"; }
+    public String goToShoppingList() { return "/shopping-list.xhtml?faces-redirect=true"; }
+    public String goToReports() { return "/reports.xhtml?faces-redirect=true"; }
+    public String goToRecommendations() { return "/recommendations.xhtml?faces-redirect=true"; }
+    public String goToGroups() { return "/groups.xhtml?faces-redirect=true"; }
 
     // Getters / Setters
     public List<ShoppingItemDTO> getShoppingItems() { return shoppingItems; }
