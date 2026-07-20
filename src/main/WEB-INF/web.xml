@@ -12,12 +12,16 @@
     <servlet>
         <servlet-name>Faces Servlet</servlet-name>
         <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
     </servlet>
     
     <servlet-mapping>
         <servlet-name>Faces Servlet</servlet-name>
         <url-pattern>*.jsf</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>Faces Servlet</servlet-name>
+        <url-pattern>*.xhtml</url-pattern>
     </servlet-mapping>
     
     <servlet-mapping>
@@ -51,7 +55,7 @@
         <tracking-mode>COOKIE</tracking-mode>
     </session-config>
     
-    <!-- Security Configuration -->
+    <!-- Security Configuration - DISABLED FOR DEVELOPMENT 
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>Protected Resources</web-resource-name>
@@ -66,6 +70,7 @@
             <transport-guarantee>CONFIDENTIAL</transport-guarantee>
         </user-data-constraint>
     </security-constraint>
+    -->
     
     <!-- Error Pages -->
     <error-page>

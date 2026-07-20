@@ -4,3 +4,9 @@
 
 /.github/agents
 /.vs
+
+# Maven/Java build output
+/target/
+
+# VS Code local settings
+/.vscode/
