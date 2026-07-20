@@ -20,8 +20,6 @@ import java.util.List;
  */
 public class ErrorHandlingUtil {
     
-    private static final String ERROR_SEVERITY_KEY = "errorSeverity";
-    
     /**
      * Process an ErrorResponseDTO and add JSF validation messages for each field error.
      * 

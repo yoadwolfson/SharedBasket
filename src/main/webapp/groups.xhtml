@@ -6,19 +6,302 @@
       xmlns:f="http://xmlns.jcp.org/jsf/core"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
 
-<ui:composition template="/WEB-INF/templates/layouts/base-layout.xhtml">
-    <ui:param name="pageTitle" value="Groups - Shared Basket" />
+<h:head>
+    <title>Groups - Shared Basket</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <h:outputStylesheet library="css" name="bootstrap.min.css" />
+    <h:outputStylesheet library="css" name="base-layout.css" />
+    <h:outputStylesheet library="css" name="components.css" />
+    <h:outputStylesheet library="css" name="groups.css" />
+</h:head>
 
-    <ui:define name="content">
-        <div class="sb-groups-container">
-            <h2 class="sb-page-title">Shopping Groups</h2>
+<h:body styleClass="sb-app-body">
+    <div class="sb-app-container">
 
-            <div class="sb-groups-content">
-                <p class="sb-placeholder-text">Group management feature - Phase 3 implementation</p>
+        <div class="sb-header">
+            <div class="sb-header-container">
+                <div class="sb-header-brand">
+                    <h1 class="sb-app-title"><a class="sb-brand-link" href="/dashboard.xhtml">Shared Basket</a></h1>
+                </div>
+                <div class="sb-header-right">
+                    <div class="sb-user-info">
+                        <span class="sb-user-email">dev@sharedbasket.local</span>
+                        <span class="sb-user-name">Dev User</span>
+                    </div>
+                </div>
             </div>
         </div>
-    </ui:define>
 
-</ui:composition>
+        <nav class="sb-main-nav" role="navigation">
+            <div class="sb-nav-container">
+                <ul class="sb-nav-menu">
+                    <li class="sb-nav-item"><a class="sb-nav-link" href="/dashboard.xhtml">Dashboard</a></li>
+                    <li class="sb-nav-item"><a class="sb-nav-link" href="/shopping-list.xhtml">Shopping List</a></li>
+                    <li class="sb-nav-item"><a class="sb-nav-link" href="/groups.xhtml">Groups</a></li>
+                    <li class="sb-nav-item"><a class="sb-nav-link" href="/reports.xhtml">Reports</a></li>
+                    <li class="sb-nav-item"><a class="sb-nav-link" href="/recommendations.xhtml">Recommendations</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="sb-main-content">
+            <div class="sb-page-wrapper">
+                <div class="sb-groups-container">
+
+                    <h2 class="sb-page-title">Shopping Groups</h2>
+                    <p class="sb-groups-intro">Create a group, join by invite code, or manage members and requests from one screen.</p>
+
+                    <!-- Alerts from backing bean -->
+                    <ui:repeat value="#{groupsController.alerts}" var="alert">
+                        <div class="sb-alert sb-alert-#{alert.type}">
+                            <h:outputText value="#{alert.message}" />
+                        </div>
+                    </ui:repeat>
+
+                    <!-- Action forms -->
+                    <div class="sb-groups-grid">
+
+                        <h:form id="createGroupForm" styleClass="sb-widget sb-groups-card">
+                            <h3 class="sb-widget-title">Create Group</h3>
+                            <p class="sb-groups-card-copy">Start a new shopping space and become its admin automatically.</p>
+                            <div class="sb-form-group">
+                                <h:outputLabel for="groupName" styleClass="sb-form-label" value="Group Name" />
+                                <h:inputText id="groupName" value="#{groupsController.createGroupName}"
+                                             styleClass="sb-form-input" required="true"
+                                             requiredMessage="Group name is required" />
+                                <h:message for="groupName" styleClass="sb-field-error" />
+                            </div>
+                            <h:commandButton value="Create Group" action="#{groupsController.createGroup}"
+                                             styleClass="sb-btn sb-btn-primary sb-btn-block" />
+                        </h:form>
+
+                        <h:form id="joinCodeForm" styleClass="sb-widget sb-groups-card">
+                            <h3 class="sb-widget-title">Join by Invite Code</h3>
+                            <p class="sb-groups-card-copy">Use a code shared by an admin to join immediately.</p>
+                            <div class="sb-form-group">
+                                <h:outputLabel for="inviteCode" styleClass="sb-form-label" value="Invite Code" />
+                                <h:inputText id="inviteCode" value="#{groupsController.joinInviteCode}"
+                                             styleClass="sb-form-input" required="true"
+                                             requiredMessage="Invite code is required" />
+                                <h:message for="inviteCode" styleClass="sb-field-error" />
+                            </div>
+                            <h:commandButton value="Join Group" action="#{groupsController.joinByCode}"
+                                             styleClass="sb-btn sb-btn-secondary sb-btn-block" />
+                        </h:form>
+
+                        <h:form id="requestGroupForm" styleClass="sb-widget sb-groups-card">
+                            <h3 class="sb-widget-title">Request Private Access</h3>
+                            <p class="sb-groups-card-copy">Send a request to a private group when you only know its ID.</p>
+                            <div class="sb-form-group">
+                                <h:outputLabel for="requestGroupId" styleClass="sb-form-label" value="Group ID" />
+                                <h:inputText id="requestGroupId" value="#{groupsController.requestGroupId}"
+                                             styleClass="sb-form-input" required="true"
+                                             requiredMessage="Group ID is required" />
+                                <h:message for="requestGroupId" styleClass="sb-field-error" />
+                            </div>
+                            <h:commandButton value="Send Request" action="#{groupsController.requestToJoin}"
+                                             styleClass="sb-btn sb-btn-secondary sb-btn-block" />
+                        </h:form>
+
+                    </div>
+
+                    <!-- My Groups list -->
+                    <section class="sb-widget sb-groups-section">
+                        <h3 class="sb-widget-title">My Groups</h3>
+                        <p class="sb-groups-card-copy">Your accepted memberships appear here with the current invite code and access level.</p>
+
+                        <h:panelGroup rendered="#{empty groupsController.groups}">
+                            <p class="sb-placeholder-text">You are not a member of any group yet.</p>
+                        </h:panelGroup>
+
+                        <h:panelGroup rendered="#{not empty groupsController.groups}" layout="block">
+                            <div class="sb-table-wrap">
+                                <table class="sb-table sb-groups-table" style="width:100%;">
+                                    <thead>
+                                        <tr>
+                                            <th>Group</th>
+                                            <th>Invite Code</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <ui:repeat value="#{groupsController.groups}" var="group">
+                                            <tr>
+                                                <td>
+                                                    <div class="sb-groups-table-title">
+                                                        <h:outputText value="#{group.name}" />
+                                                    </div>
+                                                    <div class="sb-groups-table-meta">
+                                                        ID: <h:outputText value="#{group.id}" />
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="sb-badge sb-badge-neutral">
+                                                        <h:outputText value="#{group.inviteCode}" />
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="sb-badge">
+                                                        <h:outputText value="#{group.myRole}" />
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="sb-badge">
+                                                        <h:outputText value="#{group.myStatus}" />
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <h:form>
+                                                        <h:commandButton value="Open"
+                                                                         styleClass="sb-btn sb-btn-secondary"
+                                                                         action="#{groupsController.selectGroup(group.id)}" />
+                                                    </h:form>
+                                                </td>
+                                            </tr>
+                                        </ui:repeat>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </h:panelGroup>
+                    </section>
+
+                    <!-- Selected group detail (visible once a group is opened) -->
+                    <h:panelGroup rendered="#{groupsController.selectedGroupId != null}"
+                                  styleClass="sb-widget sb-groups-section sb-groups-detail" layout="block">
+
+                        <div class="sb-groups-section-header">
+                            <div>
+                                <h3 class="sb-widget-title">
+                                    Selected: <h:outputText value="#{groupsController.selectedGroup.name}" />
+                                </h3>
+                                <p class="sb-groups-card-copy">Review members, pending requests, and admin actions for this group.</p>
+                            </div>
+                            <div class="sb-groups-actions-inline">
+                                <span class="sb-badge sb-badge-neutral">
+                                    Invite: <h:outputText value="#{groupsController.selectedGroup.inviteCode}" />
+                                </span>
+                            </div>
+                        </div>
+
+                        <h:form id="groupActionsForm" styleClass="sb-action-buttons">
+                            <h:commandButton value="Leave Group"
+                                             action="#{groupsController.leaveSelectedGroup}"
+                                             styleClass="sb-btn sb-btn-secondary" />
+                            <h:commandButton value="Regenerate Invite Code"
+                                             action="#{groupsController.regenerateInviteCode}"
+                                             styleClass="sb-btn sb-btn-primary"
+                                             rendered="#{groupsController.selectedGroupAdmin}" />
+                        </h:form>
+
+                        <!-- Members table -->
+                        <h4 class="sb-groups-subtitle">Members</h4>
+
+                        <h:panelGroup rendered="#{empty groupsController.selectedMembers}">
+                            <p class="sb-placeholder-text">No members found.</p>
+                        </h:panelGroup>
+
+                        <h:panelGroup rendered="#{not empty groupsController.selectedMembers}" layout="block">
+                            <div class="sb-table-wrap">
+                                <table class="sb-table sb-groups-table" style="width:100%;">
+                                    <thead>
+                                        <tr>
+                                            <th>Member</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th>Admin Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <ui:repeat value="#{groupsController.selectedMembers}" var="member">
+                                            <tr>
+                                                <td>
+                                                    <div class="sb-groups-table-title">
+                                                        <h:outputText value="#{member.userEmail}" />
+                                                    </div>
+                                                    <div class="sb-groups-table-meta">
+                                                        User ID: <h:outputText value="#{member.userId}" />
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="sb-badge">
+                                                        <h:outputText value="#{member.role}" />
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="sb-badge">
+                                                        <h:outputText value="#{member.status}" />
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <h:form rendered="#{groupsController.selectedGroupAdmin}">
+                                                        <h:commandButton value="Remove"
+                                                                         styleClass="sb-btn sb-btn-secondary"
+                                                                         action="#{groupsController.removeMember(member.userId)}" />
+                                                    </h:form>
+                                                </td>
+                                            </tr>
+                                        </ui:repeat>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </h:panelGroup>
+
+                        <!-- Pending requests (admin only) -->
+                        <h:panelGroup rendered="#{groupsController.selectedGroupAdmin and not empty groupsController.selectedPendingRequests}"
+                                      layout="block">
+                            <h4 class="sb-groups-subtitle">Pending Join Requests</h4>
+                            <div class="sb-table-wrap">
+                                <table class="sb-table sb-groups-table" style="width:100%;">
+                                    <thead>
+                                        <tr>
+                                            <th>Request</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <ui:repeat value="#{groupsController.selectedPendingRequests}" var="req">
+                                            <tr>
+                                                <td>
+                                                    <div class="sb-groups-table-title">
+                                                        <h:outputText value="#{req.userEmail}" />
+                                                    </div>
+                                                    <div class="sb-groups-table-meta">
+                                                        Request ID: <h:outputText value="#{req.id}" />
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="sb-badge">
+                                                        <h:outputText value="#{req.status}" />
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <h:form>
+                                                        <h:commandButton value="Approve"
+                                                                         styleClass="sb-btn sb-btn-primary"
+                                                                         action="#{groupsController.approveRequest(req.id)}" />
+                                                        <h:outputText value="&#160;" />
+                                                        <h:commandButton value="Reject"
+                                                                         styleClass="sb-btn sb-btn-secondary"
+                                                                         action="#{groupsController.rejectRequest(req.id)}" />
+                                                    </h:form>
+                                                </td>
+                                            </tr>
+                                        </ui:repeat>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </h:panelGroup>
+
+                    </h:panelGroup>
+
+                </div>
+            </div>
+        </main>
+    </div>
+</h:body>
 
 </html>

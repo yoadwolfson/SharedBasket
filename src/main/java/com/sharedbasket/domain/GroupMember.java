@@ -21,8 +21,14 @@ public class GroupMember {
 	@Column(nullable = false)
 	private String role = "MEMBER";
 
+	@Column(nullable = false)
+	private String status = "ACCEPTED";
+
 	@Column(name = "joined_at", nullable = false)
 	private Instant joinedAt = Instant.now();
+
+	@Column(name = "decided_at")
+	private Instant decidedAt;
 
 	public Long getId() {
 		return id;
@@ -56,11 +62,27 @@ public class GroupMember {
 		this.role = role;
 	}
 
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
 	public Instant getJoinedAt() {
 		return joinedAt;
 	}
 
 	public void setJoinedAt(Instant joinedAt) {
 		this.joinedAt = joinedAt;
+	}
+
+	public Instant getDecidedAt() {
+		return decidedAt;
+	}
+
+	public void setDecidedAt(Instant decidedAt) {
+		this.decidedAt = decidedAt;
 	}
 }

@@ -1,1 +1,0 @@
-/* Shell UI placeholder script. */

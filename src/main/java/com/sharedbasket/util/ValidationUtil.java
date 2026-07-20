@@ -1,7 +1,6 @@
 package com.sharedbasket.util;
 
 import javax.faces.context.FacesContext;
-import java.util.Map;
 
 /**
  * Validation Utility Class
