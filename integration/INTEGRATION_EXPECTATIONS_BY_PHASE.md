@@ -196,7 +196,7 @@ These are the files where @DevAConnection markers were added.
 ### Java contracts and integration classes
 
 - [ ] src/main/java/com/sharedbasket/service/AuthenticationService.java
-- [ ] src/main/java/com/sharedbasket/controller/ShellController.java
+- [ ] src/main/java/com/sharedbasket/controller/jsf/ShellController.java
 - [ ] src/main/java/com/sharedbasket/util/ErrorHandlingUtil.java
 - [ ] src/main/java/com/sharedbasket/dto/UserDTO.java
 - [ ] src/main/java/com/sharedbasket/dto/ErrorResponseDTO.java
@@ -233,7 +233,7 @@ Phase 1
 
 Phase 2
 - [ ] src/main/java/com/sharedbasket/service/AuthenticationService.java
-- [ ] src/main/java/com/sharedbasket/controller/ShellController.java
+- [ ] src/main/java/com/sharedbasket/controller/jsf/ShellController.java
 - [ ] src/main/java/com/sharedbasket/dto/UserDTO.java
 
 Phase 3

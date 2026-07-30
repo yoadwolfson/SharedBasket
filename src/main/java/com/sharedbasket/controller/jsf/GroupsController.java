@@ -1,11 +1,18 @@
-package com.sharedbasket.controller;
+package com.sharedbasket.controller.jsf;
 
 import com.sharedbasket.dto.AlertDTO;
 import com.sharedbasket.dto.CreateGroupRequestDTO;
 import com.sharedbasket.dto.GroupDTO;
 import com.sharedbasket.dto.GroupMemberDTO;
 import com.sharedbasket.dto.JoinByCodeRequestDTO;
-import com.sharedbasket.service.GroupService;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -14,6 +21,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.ServletContext;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -26,7 +34,7 @@ public class GroupsController implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private GroupService groupService;
+    private transient RestTemplate restTemplate;
 
     @ManagedProperty(value = "#{shellController}")
     private ShellController shellController;
@@ -48,33 +56,43 @@ public class GroupsController implements Serializable {
         groups = new ArrayList<>();
         selectedMembers = new ArrayList<>();
         selectedPendingRequests = new ArrayList<>();
-        groupService = resolveSpringBean(GroupService.class);
+        restTemplate = resolveSpringBean(RestTemplate.class);
         reloadGroups();
     }
 
     public void createGroup() {
         alerts.clear();
         try {
-            Long currentUserId = getCurrentUserId();
-            groupService.createGroup(currentUserId, new CreateGroupRequestDTO(createGroupName));
+            CreateGroupRequestDTO request = new CreateGroupRequestDTO(createGroupName);
+            restTemplate.exchange(
+                groupsApiBaseUrl(),
+                HttpMethod.POST,
+                new HttpEntity<>(request, buildJsonHeaders()),
+                GroupDTO.class
+            );
             createGroupName = null;
             addSuccess("Group created successfully");
             reloadGroups();
         } catch (Exception ex) {
-            addError(ex.getMessage());
+            addError(extractErrorMessage(ex));
         }
     }
 
     public void joinByCode() {
         alerts.clear();
         try {
-            Long currentUserId = getCurrentUserId();
-            groupService.joinByCode(currentUserId, new JoinByCodeRequestDTO(joinInviteCode));
+            JoinByCodeRequestDTO request = new JoinByCodeRequestDTO(joinInviteCode);
+            restTemplate.exchange(
+                groupsApiBaseUrl() + "/join-by-code",
+                HttpMethod.POST,
+                new HttpEntity<>(request, buildJsonHeaders()),
+                GroupMemberDTO.class
+            );
             joinInviteCode = null;
             addSuccess("Joined group successfully");
             reloadGroups();
         } catch (Exception ex) {
-            addError(ex.getMessage());
+            addError(extractErrorMessage(ex));
         }
     }
 
@@ -82,12 +100,16 @@ public class GroupsController implements Serializable {
         alerts.clear();
         try {
             Long groupId = parseId(requestGroupId);
-            Long currentUserId = getCurrentUserId();
-            groupService.requestToJoin(currentUserId, groupId);
+            restTemplate.exchange(
+                groupsApiBaseUrl() + "/" + groupId + "/join-requests",
+                HttpMethod.POST,
+                new HttpEntity<>(buildJsonHeaders()),
+                GroupMemberDTO.class
+            );
             requestGroupId = null;
             addSuccess("Join request submitted");
         } catch (Exception ex) {
-            addError(ex.getMessage());
+            addError(extractErrorMessage(ex));
         }
     }
 
@@ -103,11 +125,16 @@ public class GroupsController implements Serializable {
             return;
         }
         try {
-            groupService.approveJoinRequest(getCurrentUserId(), selectedGroupId, requestId);
+            restTemplate.exchange(
+                groupsApiBaseUrl() + "/" + selectedGroupId + "/join-requests/" + requestId + "/approve",
+                HttpMethod.POST,
+                new HttpEntity<>(buildJsonHeaders()),
+                GroupMemberDTO.class
+            );
             addSuccess("Join request approved");
             reloadSelectedGroupData();
         } catch (Exception ex) {
-            addError(ex.getMessage());
+            addError(extractErrorMessage(ex));
         }
     }
 
@@ -117,11 +144,16 @@ public class GroupsController implements Serializable {
             return;
         }
         try {
-            groupService.rejectJoinRequest(getCurrentUserId(), selectedGroupId, requestId);
+            restTemplate.exchange(
+                groupsApiBaseUrl() + "/" + selectedGroupId + "/join-requests/" + requestId + "/reject",
+                HttpMethod.POST,
+                new HttpEntity<>(buildJsonHeaders()),
+                GroupMemberDTO.class
+            );
             addSuccess("Join request rejected");
             reloadSelectedGroupData();
         } catch (Exception ex) {
-            addError(ex.getMessage());
+            addError(extractErrorMessage(ex));
         }
     }
 
@@ -131,11 +163,16 @@ public class GroupsController implements Serializable {
             return;
         }
         try {
-            groupService.removeMember(getCurrentUserId(), selectedGroupId, memberUserId);
+            restTemplate.exchange(
+                groupsApiBaseUrl() + "/" + selectedGroupId + "/members/" + memberUserId,
+                HttpMethod.DELETE,
+                new HttpEntity<>(buildJsonHeaders()),
+                Void.class
+            );
             addSuccess("Member removed from group");
             reloadSelectedGroupData();
         } catch (Exception ex) {
-            addError(ex.getMessage());
+            addError(extractErrorMessage(ex));
         }
     }
 
@@ -146,14 +183,19 @@ public class GroupsController implements Serializable {
             return;
         }
         try {
-            groupService.leaveGroup(getCurrentUserId(), selectedGroupId);
+            restTemplate.exchange(
+                groupsApiBaseUrl() + "/" + selectedGroupId + "/leave",
+                HttpMethod.POST,
+                new HttpEntity<>(buildJsonHeaders()),
+                Void.class
+            );
             selectedGroupId = null;
             selectedMembers = Collections.emptyList();
             selectedPendingRequests = Collections.emptyList();
             addSuccess("You left the group");
             reloadGroups();
         } catch (Exception ex) {
-            addError(ex.getMessage());
+            addError(extractErrorMessage(ex));
         }
     }
 
@@ -164,12 +206,17 @@ public class GroupsController implements Serializable {
             return;
         }
         try {
-            groupService.regenerateInvitationCode(getCurrentUserId(), selectedGroupId);
+            restTemplate.exchange(
+                groupsApiBaseUrl() + "/" + selectedGroupId + "/invitation-code/regenerate",
+                HttpMethod.POST,
+                new HttpEntity<>(buildJsonHeaders()),
+                GroupDTO.class
+            );
             addSuccess("Invitation code regenerated");
             reloadGroups();
             reloadSelectedGroupData();
         } catch (Exception ex) {
-            addError(ex.getMessage());
+            addError(extractErrorMessage(ex));
         }
     }
 
@@ -195,12 +242,18 @@ public class GroupsController implements Serializable {
 
     private void reloadGroups() {
         try {
-            groups = groupService.listMyGroups(getCurrentUserId());
+            ResponseEntity<List<GroupDTO>> response = restTemplate.exchange(
+                groupsApiBaseUrl(),
+                HttpMethod.GET,
+                new HttpEntity<>(buildJsonHeaders()),
+                new ParameterizedTypeReference<List<GroupDTO>>() {}
+            );
+            groups = response.getBody() == null ? new ArrayList<>() : response.getBody();
             if (selectedGroupId != null) {
                 reloadSelectedGroupData();
             }
         } catch (Exception ex) {
-            addError(ex.getMessage());
+            addError(extractErrorMessage(ex));
             groups = new ArrayList<>();
         }
     }
@@ -212,24 +265,72 @@ public class GroupsController implements Serializable {
             return;
         }
         try {
-            selectedMembers = groupService.listMembers(getCurrentUserId(), selectedGroupId);
+            ResponseEntity<List<GroupMemberDTO>> membersResponse = restTemplate.exchange(
+                groupsApiBaseUrl() + "/" + selectedGroupId + "/members",
+                HttpMethod.GET,
+                new HttpEntity<>(buildJsonHeaders()),
+                new ParameterizedTypeReference<List<GroupMemberDTO>>() {}
+            );
+            selectedMembers = membersResponse.getBody() == null ? Collections.emptyList() : membersResponse.getBody();
             if (isSelectedGroupAdmin()) {
-                selectedPendingRequests = groupService.listJoinRequests(getCurrentUserId(), selectedGroupId);
+                ResponseEntity<List<GroupMemberDTO>> requestsResponse = restTemplate.exchange(
+                    groupsApiBaseUrl() + "/" + selectedGroupId + "/join-requests",
+                    HttpMethod.GET,
+                    new HttpEntity<>(buildJsonHeaders()),
+                    new ParameterizedTypeReference<List<GroupMemberDTO>>() {}
+                );
+                selectedPendingRequests = requestsResponse.getBody() == null
+                    ? Collections.emptyList()
+                    : requestsResponse.getBody();
             } else {
                 selectedPendingRequests = Collections.emptyList();
             }
         } catch (Exception ex) {
-            addError(ex.getMessage());
+            addError(extractErrorMessage(ex));
             selectedMembers = Collections.emptyList();
             selectedPendingRequests = Collections.emptyList();
         }
     }
 
-    private Long getCurrentUserId() {
-        if (shellController == null || shellController.getCurrentUser() == null || shellController.getCurrentUser().getId() == null) {
-            throw new IllegalStateException("No authenticated user in session");
+    private HttpHeaders buildJsonHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance()
+            .getExternalContext()
+            .getRequest();
+        String cookie = request.getHeader("Cookie");
+        if (cookie != null && !cookie.trim().isEmpty()) {
+            headers.add(HttpHeaders.COOKIE, cookie);
         }
-        return shellController.getCurrentUser().getId();
+        return headers;
+    }
+
+    private String groupsApiBaseUrl() {
+        HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance()
+            .getExternalContext()
+            .getRequest();
+
+        String scheme = request.getScheme();
+        String host = request.getServerName();
+        int port = request.getServerPort();
+        String contextPath = request.getContextPath() == null ? "" : request.getContextPath();
+
+        boolean defaultPort = ("http".equalsIgnoreCase(scheme) && port == 80)
+            || ("https".equalsIgnoreCase(scheme) && port == 443);
+        String base = scheme + "://" + host + (defaultPort ? "" : ":" + port) + contextPath;
+        return base + "/api/groups";
+    }
+
+    private String extractErrorMessage(Exception ex) {
+        if (ex instanceof HttpStatusCodeException) {
+            String body = ((HttpStatusCodeException) ex).getResponseBodyAsString();
+            if (body != null && !body.trim().isEmpty()) {
+                return body;
+            }
+        }
+        return ex.getMessage();
     }
 
     private Long parseId(String raw) {

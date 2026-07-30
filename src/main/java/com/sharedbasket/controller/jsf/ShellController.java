@@ -1,4 +1,4 @@
-package com.sharedbasket.controller;
+package com.sharedbasket.controller.jsf;
 
 import com.sharedbasket.dto.AlertDTO;
 import com.sharedbasket.dto.UserDTO;

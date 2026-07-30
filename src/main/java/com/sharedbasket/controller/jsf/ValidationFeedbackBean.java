@@ -1,4 +1,4 @@
-package com.sharedbasket.controller;
+package com.sharedbasket.controller.jsf;
 
 import com.sharedbasket.util.ValidationUtil;
 import javax.faces.bean.ManagedBean;
