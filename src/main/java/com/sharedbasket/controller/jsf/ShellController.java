@@ -146,21 +146,12 @@ public class ShellController implements Serializable {
         return applicationContext.getBean(beanType);
     }
     
-    // ==================== Getters & Setters ====================
+    // Getters and Setters    
+    public List<AlertDTO> getApplicationAlerts() {return applicationAlerts;}
     
-    public List<AlertDTO> getApplicationAlerts() {
-        return applicationAlerts;
-    }
+    public void setApplicationAlerts(List<AlertDTO> applicationAlerts) {this.applicationAlerts = applicationAlerts;}
     
-    public void setApplicationAlerts(List<AlertDTO> applicationAlerts) {
-        this.applicationAlerts = applicationAlerts;
-    }
+    public UserDTO getCurrentUser() {return currentUser;}
     
-    public UserDTO getCurrentUser() {
-        return currentUser;
-    }
-    
-    public void setCurrentUser(UserDTO currentUser) {
-        this.currentUser = currentUser;
-    }
+    public void setCurrentUser(UserDTO currentUser) {this.currentUser = currentUser;}
 }

@@ -49,7 +49,9 @@ public class GroupsController implements Serializable {
     private String requestGroupId;
 
     private List<AlertDTO> alerts;
-
+    /**
+     * Initializes the groups controller by setting up initial data and loading groups.
+     */
     @PostConstruct
     public void init() {
         alerts = new ArrayList<>();
@@ -59,7 +61,9 @@ public class GroupsController implements Serializable {
         restTemplate = resolveSpringBean(RestTemplate.class);
         reloadGroups();
     }
-
+    /**
+     * Creates a new group with the specified name.
+     */
     public void createGroup() {
         alerts.clear();
         try {
@@ -77,7 +81,9 @@ public class GroupsController implements Serializable {
             addError(extractErrorMessage(ex));
         }
     }
-
+    /**
+     * Joins a group using an invite code.
+     */
     public void joinByCode() {
         alerts.clear();
         try {
@@ -95,7 +101,9 @@ public class GroupsController implements Serializable {
             addError(extractErrorMessage(ex));
         }
     }
-
+    /**
+     * Requests to join a group.
+     */
     public void requestToJoin() {
         alerts.clear();
         try {
@@ -112,13 +120,19 @@ public class GroupsController implements Serializable {
             addError(extractErrorMessage(ex));
         }
     }
-
+    /**
+     * Selects a group by its ID and reloads its data.
+     * @param groupId The ID of the group to select.
+     */
     public void selectGroup(Long groupId) {
         alerts.clear();
         this.selectedGroupId = groupId;
         reloadSelectedGroupData();
     }
-
+    /**
+     * Approves a join request for the selected group.
+     * @param requestId The ID of the join request to approve.
+     */
     public void approveRequest(Long requestId) {
         if (selectedGroupId == null) {
             addError("Select a group first");
@@ -138,6 +152,10 @@ public class GroupsController implements Serializable {
         }
     }
 
+    /**
+     * Rejects a join request for the selected group.
+     * @param requestId The ID of the join request to reject.
+     */
     public void rejectRequest(Long requestId) {
         if (selectedGroupId == null) {
             addError("Select a group first");
@@ -156,7 +174,10 @@ public class GroupsController implements Serializable {
             addError(extractErrorMessage(ex));
         }
     }
-
+    /**
+     * Removes a member from the selected group.
+     * @param memberUserId The user ID of the member to remove.
+     */
     public void removeMember(Long memberUserId) {
         if (selectedGroupId == null) {
             addError("Select a group first");
@@ -175,7 +196,9 @@ public class GroupsController implements Serializable {
             addError(extractErrorMessage(ex));
         }
     }
-
+    /**
+     * Leaves the selected group.
+     */
     public void leaveSelectedGroup() {
         alerts.clear();
         if (selectedGroupId == null) {
@@ -198,7 +221,9 @@ public class GroupsController implements Serializable {
             addError(extractErrorMessage(ex));
         }
     }
-
+    /**
+     * Regenerates the invitation code for the selected group.
+     */
     public void regenerateInviteCode() {
         alerts.clear();
         if (selectedGroupId == null) {
@@ -219,7 +244,10 @@ public class GroupsController implements Serializable {
             addError(extractErrorMessage(ex));
         }
     }
-
+    /**
+     * Checks if the currently selected group has the user as an admin with accepted status.
+     * @return true if the user is an admin of the selected group and has accepted status, false otherwise.
+     */
     public boolean isSelectedGroupAdmin() {
         if (selectedGroupId == null) {
             return false;
@@ -227,7 +255,10 @@ public class GroupsController implements Serializable {
         GroupDTO selected = getSelectedGroup();
         return selected != null && "ADMIN".equals(selected.getMyRole()) && "ACCEPTED".equals(selected.getMyStatus());
     }
-
+    /**
+     * Gets the currently selected group based on the selectedGroupId.
+     * @return The GroupDTO of the selected group, or null if no group is selected or found.
+     */
     public GroupDTO getSelectedGroup() {
         if (selectedGroupId == null) {
             return null;
@@ -239,7 +270,9 @@ public class GroupsController implements Serializable {
         }
         return null;
     }
-
+    /**
+     * Reloads the list of groups from the API.
+     */
     private void reloadGroups() {
         try {
             ResponseEntity<List<GroupDTO>> response = restTemplate.exchange(
@@ -257,7 +290,9 @@ public class GroupsController implements Serializable {
             groups = new ArrayList<>();
         }
     }
-
+    /**
+     * Reloads the data for the currently selected group from the API.
+     */
     private void reloadSelectedGroupData() {
         if (selectedGroupId == null) {
             selectedMembers = Collections.emptyList();
@@ -291,7 +326,10 @@ public class GroupsController implements Serializable {
             selectedPendingRequests = Collections.emptyList();
         }
     }
-
+    /**
+     * Builds HTTP headers for JSON requests, including content type, accept type, and cookies from the current request.
+     * @return HttpHeaders configured for JSON requests.
+     */
     private HttpHeaders buildJsonHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -306,7 +344,10 @@ public class GroupsController implements Serializable {
         }
         return headers;
     }
-
+    /**
+     * Constructs the base URL for the groups API based on the current request's scheme, host, port, and context path.
+     * @return The base URL for the groups API.
+     */
     private String groupsApiBaseUrl() {
         HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance()
             .getExternalContext()
@@ -322,7 +363,11 @@ public class GroupsController implements Serializable {
         String base = scheme + "://" + host + (defaultPort ? "" : ":" + port) + contextPath;
         return base + "/api/groups";
     }
-
+    /**
+     * Extracts a user-friendly error message from an exception, particularly handling HttpStatusCodeException to retrieve the response body if available.
+     * @param ex The exception from which to extract the error message.
+     * @return A string containing the error message, either from the response body or the exception's message.
+     */
     private String extractErrorMessage(Exception ex) {
         if (ex instanceof HttpStatusCodeException) {
             String body = ((HttpStatusCodeException) ex).getResponseBodyAsString();
@@ -332,7 +377,12 @@ public class GroupsController implements Serializable {
         }
         return ex.getMessage();
     }
-
+    /**
+     * Parses a string to a Long ID, throwing an IllegalArgumentException if the input is null, empty, or not a valid number.
+     * @param raw The raw string to parse as a Long ID.
+     * @return The parsed Long ID.
+     * @throws IllegalArgumentException if the input is null, empty, or not a valid number.
+     */
     private Long parseId(String raw) {
         if (raw == null || raw.trim().isEmpty()) {
             throw new IllegalArgumentException("Group ID is required");
@@ -343,71 +393,55 @@ public class GroupsController implements Serializable {
             throw new IllegalArgumentException("Group ID must be a number");
         }
     }
-
+    /**
+     * Adds a success alert message to the alerts list.
+     * @param message The success message to add.
+     */
     private void addSuccess(String message) {
         alerts.add(new AlertDTO("success", message));
     }
-
+    /**
+     * Adds an error alert message to the alerts list.
+     * @param message The error message to add.
+     */
     private void addError(String message) {
         alerts.add(new AlertDTO("error", message));
     }
+ //   Getters and Setters
+    public List<GroupDTO> getGroups() {return groups;}
 
-    public List<GroupDTO> getGroups() {
-        return groups;
-    }
+    public List<GroupMemberDTO> getSelectedMembers() {return selectedMembers;}
 
-    public List<GroupMemberDTO> getSelectedMembers() {
-        return selectedMembers;
-    }
+    public List<GroupMemberDTO> getSelectedPendingRequests() {return selectedPendingRequests;}
 
-    public List<GroupMemberDTO> getSelectedPendingRequests() {
-        return selectedPendingRequests;
-    }
+    public Long getSelectedGroupId() {return selectedGroupId;}
 
-    public Long getSelectedGroupId() {
-        return selectedGroupId;
-    }
+    public void setSelectedGroupId(Long selectedGroupId) {this.selectedGroupId = selectedGroupId;}
 
-    public void setSelectedGroupId(Long selectedGroupId) {
-        this.selectedGroupId = selectedGroupId;
-    }
+    public String getCreateGroupName() {return createGroupName;}
 
-    public String getCreateGroupName() {
-        return createGroupName;
-    }
+    public void setCreateGroupName(String createGroupName) {this.createGroupName = createGroupName;}
 
-    public void setCreateGroupName(String createGroupName) {
-        this.createGroupName = createGroupName;
-    }
+    public String getJoinInviteCode() {return joinInviteCode;}
 
-    public String getJoinInviteCode() {
-        return joinInviteCode;
-    }
+    public void setJoinInviteCode(String joinInviteCode) {this.joinInviteCode = joinInviteCode;}
 
-    public void setJoinInviteCode(String joinInviteCode) {
-        this.joinInviteCode = joinInviteCode;
-    }
+    public String getRequestGroupId() {return requestGroupId;}
 
-    public String getRequestGroupId() {
-        return requestGroupId;
-    }
+    public void setRequestGroupId(String requestGroupId) {this.requestGroupId = requestGroupId;}
 
-    public void setRequestGroupId(String requestGroupId) {
-        this.requestGroupId = requestGroupId;
-    }
+    public List<AlertDTO> getAlerts() {return alerts;}
 
-    public List<AlertDTO> getAlerts() {
-        return alerts;
-    }
+    public ShellController getShellController() {return shellController;}
 
-    public ShellController getShellController() {
-        return shellController;
-    }
+    public void setShellController(ShellController shellController) {this.shellController = shellController;}
 
-    public void setShellController(ShellController shellController) {
-        this.shellController = shellController;
-    }
-
+    /**
+     * Resolves a Spring bean of the specified type from the current web application context.
+     * @param <T> The type of the bean to resolve.
+     * @param beanType The class type of the bean to resolve.
+     * @return An instance of the requested Spring bean.
+     */
     private <T> T resolveSpringBean(Class<T> beanType) {
         FacesContext facesContext = FacesContext.getCurrentInstance();
         if (facesContext == null) {

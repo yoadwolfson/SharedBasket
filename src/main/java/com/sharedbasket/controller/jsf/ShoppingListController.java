@@ -57,7 +57,9 @@ public class ShoppingListController implements Serializable {
         this.processedEventIds = new HashSet<>();
         this.selectedScenario = "ORDERING_EDGE_CASE";
     }
-
+    /**
+     * Connect to the realtime event source.
+     */
     public void connectRealtime() {
         alerts.clear();
         try {
@@ -73,21 +75,27 @@ public class ShoppingListController implements Serializable {
             addError(ex.getMessage());
         }
     }
-
+    /**
+     * Reconnect to the realtime event source.
+     */
     public void reconnectRealtime() {
         alerts.clear();
         disconnectRealtime();
         connectRealtime();
         addSuccess("Realtime connection re-established");
     }
-
+    /**
+     * Disconnect from the realtime event source.
+     */
     public void disconnectRealtime() {
         alerts.clear();
         realtimeEventSource.disconnect();
         realtimeState = STATE_DISCONNECTED;
         addSuccess("Realtime connection stopped");
     }
-
+    /**
+     * Process the next mock event from the realtime event source.
+     */
     public void processNextMockEvent() {
         alerts.clear();
         if (!realtimeEventSource.isConnected()) {
@@ -148,7 +156,9 @@ public class ShoppingListController implements Serializable {
 
         addSuccess(lastEventMessage);
     }
-
+    /**
+     * Refresh the shopping list snapshot.
+     */
     public void refreshSnapshot() {
         shoppingItems = new ArrayList<>(FrontendDtoAdapter.createPlaceholderShoppingItems());
         processedEventIds.clear();
@@ -157,15 +167,24 @@ public class ShoppingListController implements Serializable {
             realtimeState = STATE_CONNECTED;
         }
     }
-
+    /**
+     * Check if the realtime connection is currently active.
+     * @return true if connected, false otherwise
+     */
     public boolean isConnected() {
         return STATE_CONNECTED.equals(realtimeState);
     }
-
+    /**
+     * Check if the realtime connection is currently degraded.
+     * @return true if degraded, false otherwise
+     */
     public boolean isDegraded() {
         return STATE_DEGRADED.equals(realtimeState);
     }
-
+    /**
+     * Process a realtime shopping event and update the shopping list accordingly.
+     * @param event The realtime shopping event to process
+     */
     private void updateOrInsert(RealtimeShoppingEventDTO event) {
         for (ShoppingItemDTO item : shoppingItems) {
             if (item.getName() != null && item.getName().equalsIgnoreCase(event.getItemName())) {
@@ -177,7 +196,10 @@ public class ShoppingListController implements Serializable {
 
         shoppingItems.add(new ShoppingItemDTO(event.getItemName(), event.getQuantity(), event.getEstimatedPrice()));
     }
-
+    /**
+     * Remove a shopping item from the list by its name.
+     * @param itemName The name of the item to remove
+     */
     private void removeByName(String itemName) {
         if (itemName == null) {
             return;
@@ -185,16 +207,27 @@ public class ShoppingListController implements Serializable {
 
         shoppingItems.removeIf(item -> item.getName() != null && item.getName().equalsIgnoreCase(itemName));
     }
-
+    /**
+     * Check if the given event has already been processed (duplicate).
+     * @param event The realtime shopping event to check
+     * @return true if the event is a duplicate, false otherwise
+     */
     private boolean isDuplicateEvent(RealtimeShoppingEventDTO event) {
         String eventId = event.getEventId();
         return eventId != null && processedEventIds.contains(eventId);
     }
-
+    /**
+     * Check if the given event is out of order based on its version number.
+     * @param event The realtime shopping event to check
+     * @return true if the event is out of order, false otherwise
+     */
     private boolean isOutOfOrderEvent(RealtimeShoppingEventDTO event) {
         return event.getVersion() > 0 && event.getVersion() < lastAppliedVersion;
     }
-
+    /**
+     * Track the processed event by storing its ID and updating the last applied version.
+     * @param event The realtime shopping event to track
+     */
     private void trackEvent(RealtimeShoppingEventDTO event) {
         if (event.getEventId() != null) {
             processedEventIds.add(event.getEventId());
@@ -204,13 +237,8 @@ public class ShoppingListController implements Serializable {
         }
     }
 
-    private Long getCurrentUserId() {
-        if (shellController == null || shellController.getCurrentUser() == null || shellController.getCurrentUser().getId() == null) {
-            throw new IllegalStateException("No authenticated user in session");
-        }
-        return shellController.getCurrentUser().getId();
-    }
 
+// add alert messages to the list.
     private void addSuccess(String message) {
         alerts.add(new AlertDTO("success", message));
     }
@@ -222,7 +250,7 @@ public class ShoppingListController implements Serializable {
     private void addError(String message) {
         alerts.add(new AlertDTO("error", message));
     }
-
+// resolve a Spring bean from the application context using the FacesContext and ServletContext.
     private <T> T resolveSpringBean(Class<T> beanType) {
         FacesContext facesContext = FacesContext.getCurrentInstance();
         if (facesContext == null) {
@@ -233,6 +261,13 @@ public class ShoppingListController implements Serializable {
         WebApplicationContext applicationContext =
             WebApplicationContextUtils.getRequiredWebApplicationContext(servletContext);
         return applicationContext.getBean(beanType);
+    }
+    // getters and
+    private Long getCurrentUserId() {
+        if (shellController == null || shellController.getCurrentUser() == null || shellController.getCurrentUser().getId() == null) {
+            throw new IllegalStateException("No authenticated user in session");
+        }
+        return shellController.getCurrentUser().getId();
     }
 
     public List<ShoppingItemDTO> getShoppingItems() {
