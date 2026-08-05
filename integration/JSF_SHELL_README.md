@@ -15,8 +15,8 @@ Phase 1 foundation is done. This shell gives the app a shared layout, basic cont
 
 - `src/main/webapp/WEB-INF/templates/layouts/base-layout.xhtml` - master page layout
 - `src/main/webapp/WEB-INF/templates/fragments/` - header, navigation, alerts, footer
-- `src/main/java/com/sharedbasket/controller/ShellController.java` - session-level shell logic
-- `src/main/java/com/sharedbasket/controller/DashboardController.java` - dashboard page controller
+- `src/main/java/com/sharedbasket/controller/jsf/ShellController.java` - session-level shell logic
+- `src/main/java/com/sharedbasket/controller/jsf/DashboardController.java` - dashboard page controller
 - `src/main/java/com/sharedbasket/util/ErrorHandlingUtil.java` - backend error to JSF messages
 - `src/main/java/com/sharedbasket/util/ValidationUtil.java` - common validation helpers
 

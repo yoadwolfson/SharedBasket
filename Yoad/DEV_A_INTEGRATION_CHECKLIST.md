@@ -41,7 +41,7 @@
 
 ### Shell Controller Integration
 
-**Location**: `src/main/java/com/sharedbasket/controller/ShellController.java`
+**Location**: `src/main/java/com/sharedbasket/controller/jsf/ShellController.java`
 
 | Usage | Expected Behavior | Verification |
 |-------|-------------------|--------------|
@@ -68,7 +68,7 @@
 
 ### Current Placeholder
 
-**Location**: `src/main/java/com/sharedbasket/controller/DashboardController.java`
+**Location**: `src/main/java/com/sharedbasket/controller/jsf/DashboardController.java`
 
 ```java
 // TODO-DEV-A: Inject ShoppingItemService and load items
@@ -115,7 +115,7 @@ this.shoppingItems = new ArrayList<>();
 
 ### Current Placeholder
 
-**Location**: `src/main/java/com/sharedbasket/controller/DashboardController.java`
+**Location**: `src/main/java/com/sharedbasket/controller/jsf/DashboardController.java`
 
 ```java
 // TODO-DEV-A: Inject ReportingService and load statistics

@@ -1,4 +1,4 @@
-package com.sharedbasket.controller;
+package com.sharedbasket.controller.rest;
 
 import com.sharedbasket.dto.CreateGroupRequestDTO;
 import com.sharedbasket.dto.GroupDTO;

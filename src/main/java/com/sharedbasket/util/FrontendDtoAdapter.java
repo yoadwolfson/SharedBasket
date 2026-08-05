@@ -7,7 +7,7 @@ import com.sharedbasket.dto.UserDTO;
 
 import java.util.ArrayList;
 import java.util.List;
-
+// this class is used to create placeholder DTOs for the frontend, especially for the dashboard and recommendations pages. It provides static methods to generate sample data for shopping items, statistics, recommendations, and user information.
 public final class FrontendDtoAdapter {
     private FrontendDtoAdapter() {}
 
