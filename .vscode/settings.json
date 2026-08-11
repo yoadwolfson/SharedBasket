@@ -6,11 +6,11 @@
             "ssh": "Disabled",
             "previewLimit": 50,
             "server": "localhost",
-            "port": 5432,
+            "port": 5433,
             "driver": "PostgreSQL",
-            "name": "Shared Basket  Docker DB",
-            "username": "sharedbasket",
-            "database": "sharedbasket_dev"
+            "name": "SharedBasket Local",
+            "database": "sharedbasket_dev",
+            "username": "sharedbasket"
         }
     ]
 }

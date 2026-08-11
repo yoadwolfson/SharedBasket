@@ -57,7 +57,7 @@ public class ShellController implements Serializable {
      */
     private void initializeCurrentUser() {
         try {
-            this.currentUser = authenticationService.getCurrentUser();
+            syncCurrentUserFromAuthService();
             if (currentUser == null) {
                 redirectToLogin();
             }
@@ -98,7 +98,7 @@ public class ShellController implements Serializable {
      * Navigate to user profile.
      */
     public String navigateToProfile() {
-        return "redirect:/profile.jsf";
+        return "/profile.xhtml?faces-redirect=true";
     }
     
     /**
@@ -112,8 +112,9 @@ public class ShellController implements Serializable {
     public String logout() {
         try {
             authenticationService.logout();
+            currentUser = null;
             clearAlerts();
-            return "redirect:/login.jsf";
+            return "/login.xhtml?faces-redirect=true";
         } catch (Exception e) {
             addErrorAlert("Error during logout: " + e.getMessage());
             return null;
@@ -124,10 +125,19 @@ public class ShellController implements Serializable {
      * Redirect to login page when user is not authenticated.
      */
     private void redirectToLogin() {
+        FacesContext fc = FacesContext.getCurrentInstance();
+        if (fc == null) {
+            return;
+        }
+
+        String viewId = fc.getViewRoot() != null ? fc.getViewRoot().getViewId() : "";
+        if ("/login.xhtml".equals(viewId) || "/register.xhtml".equals(viewId)) {
+            return;
+        }
+
         try {
-            FacesContext.getCurrentInstance().getExternalContext().redirect(
-                FacesContext.getCurrentInstance().getExternalContext().getRequestContextPath() 
-                + "/login.xhtml"
+            fc.getExternalContext().redirect(
+                fc.getExternalContext().getRequestContextPath() + "/login.xhtml"
             );
         } catch (Exception e) {
             // Log error but continue
@@ -143,6 +153,7 @@ public class ShellController implements Serializable {
         ServletContext servletContext = (ServletContext) facesContext.getExternalContext().getContext();
         WebApplicationContext applicationContext =
             WebApplicationContextUtils.getRequiredWebApplicationContext(servletContext);
+
         return applicationContext.getBean(beanType);
     }
     
@@ -155,9 +166,27 @@ public class ShellController implements Serializable {
     public void setApplicationAlerts(List<AlertDTO> applicationAlerts) {
         this.applicationAlerts = applicationAlerts;
     }
-    
+
+    public void syncCurrentUserFromAuthService() {
+        if (authenticationService == null) {
+            authenticationService = resolveSpringBean(AuthenticationService.class);
+        }
+
+        try {
+            currentUser = authenticationService.getCurrentUser();
+        } catch (Exception e) {
+            currentUser = null;
+        }
+    }
+
     public UserDTO getCurrentUser() {
+        syncCurrentUserFromAuthService();
         return currentUser;
+    }
+
+    public boolean isAuthenticated() {
+        syncCurrentUserFromAuthService();
+        return currentUser != null;
     }
     
     public void setCurrentUser(UserDTO currentUser) {
