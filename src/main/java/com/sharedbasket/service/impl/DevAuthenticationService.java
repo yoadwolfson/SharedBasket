@@ -4,9 +4,9 @@ import com.sharedbasket.domain.User;
 import com.sharedbasket.dto.UserDTO;
 import com.sharedbasket.repo.UserRepository;
 import com.sharedbasket.service.AuthenticationService;
+import com.sharedbasket.util.UserViewMapper;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
@@ -33,12 +33,7 @@ public class DevAuthenticationService implements AuthenticationService {
     @Override
     public UserDTO getCurrentUser() {
         User user = userRepository.findByEmail(DEV_EMAIL).orElseGet(this::createDevUser);
-        return new UserDTO(
-            user.getId(),
-            user.getEmail(),
-            buildDisplayName(user),
-            "ADMIN"
-        );
+        return UserViewMapper.toUserDto(user, "ADMIN");
     }
 
     @Override
@@ -69,10 +64,4 @@ public class DevAuthenticationService implements AuthenticationService {
         return userRepository.save(user);
     }
 
-    private String buildDisplayName(User user) {
-        String firstName = user.getFirstName() == null ? "" : user.getFirstName().trim();
-        String lastName = user.getLastName() == null ? "" : user.getLastName().trim();
-        String fullName = (firstName + " " + lastName).trim();
-        return fullName.isEmpty() ? user.getUsername() : fullName;
-    }
 }

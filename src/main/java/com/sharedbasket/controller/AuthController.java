@@ -4,16 +4,14 @@ import com.sharedbasket.domain.User;
 import com.sharedbasket.dto.LoginRequestDTO;
 import com.sharedbasket.dto.RegisterRequestDTO;
 import com.sharedbasket.dto.UserDTO;
-import com.sharedbasket.exception.BadRequestException;
 import com.sharedbasket.exception.ConflictOperationException;
 import com.sharedbasket.exception.ForbiddenOperationException;
 import com.sharedbasket.repo.UserRepository;
-import com.sharedbasket.service.AuthenticationService;
 import com.sharedbasket.service.impl.CookieAuthenticationService;
+import com.sharedbasket.util.UserViewMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.time.Instant;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -59,7 +56,7 @@ public class AuthController {
         user.setUpdatedAt(Instant.now());
         userRepository.save(user);
 
-        return ResponseEntity.ok(mapToDto(user));
+        return ResponseEntity.ok(UserViewMapper.toUserDto(user, "MEMBER"));
     }
 
     @PostMapping("/login")
@@ -70,7 +67,7 @@ public class AuthController {
         }
 
         authenticationService.attachSession(servletRequest, user);
-        return ResponseEntity.ok(mapToDto(user));
+        return ResponseEntity.ok(UserViewMapper.toUserDto(user, "MEMBER"));
     }
 
     @GetMapping("/me")
@@ -84,23 +81,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest servletRequest) {
-        authenticationService.logout();
+        authenticationService.logout(servletRequest);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    }
-
-    private UserDTO mapToDto(User user) {
-        return new UserDTO(
-            user.getId(),
-            user.getEmail(),
-            buildDisplayName(user),
-            "MEMBER"
-        );
-    }
-
-    private String buildDisplayName(User user) {
-        String firstName = user.getFirstName() == null ? "" : user.getFirstName().trim();
-        String lastName = user.getLastName() == null ? "" : user.getLastName().trim();
-        String fullName = (firstName + " " + lastName).trim();
-        return fullName.isEmpty() ? user.getUsername() : fullName;
     }
 }

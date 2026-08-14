@@ -1,19 +1,25 @@
 package com.sharedbasket.controller.jsf;
 
 import com.sharedbasket.controller.ShellController;
-import com.sharedbasket.domain.User;
+import com.sharedbasket.dto.LoginRequestDTO;
 import com.sharedbasket.dto.UserDTO;
-import com.sharedbasket.service.impl.CookieAuthenticationService;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
+import com.sharedbasket.util.JsfRestClientSupport;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
-import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletResponse;
 import java.io.Serializable;
+import java.util.List;
 
 @ManagedBean(name = "loginBean")
 @RequestScoped
@@ -21,14 +27,14 @@ public class LoginBean implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private transient CookieAuthenticationService cookieAuthService;
+    private transient RestTemplate restTemplate;
 
     private String email;
     private String password;
 
     @PostConstruct
     public void init() {
-        this.cookieAuthService = resolveSpringBean(CookieAuthenticationService.class);
+        this.restTemplate = JsfRestClientSupport.resolveBean(RestTemplate.class);
     }
 
     public String login() {
@@ -38,21 +44,53 @@ public class LoginBean implements Serializable {
         }
 
         String normalizedEmail = email.trim().toLowerCase();
-        User user = cookieAuthService.authenticate(normalizedEmail, password);
+        LoginRequestDTO loginRequest = new LoginRequestDTO();
+        loginRequest.setEmail(normalizedEmail);
+        loginRequest.setPassword(password);
 
-        if (user == null) {
+        try {
+            ResponseEntity<UserDTO> response = restTemplate.exchange(
+                JsfRestClientSupport.apiBaseUrl("/api/auth") + "/login",
+                HttpMethod.POST,
+                new HttpEntity<>(loginRequest, JsfRestClientSupport.buildJsonHeaders()),
+                UserDTO.class
+            );
+
+            if (response.getBody() == null) {
+                addError("Invalid email or password.");
+                return null;
+            }
+
+            forwardSessionCookie(response.getHeaders());
+        } catch (HttpStatusCodeException ex) {
             addError("Invalid email or password.");
             return null;
+        } catch (Exception ex) {
+            addError("Login is currently unavailable.");
+            return null;
         }
-        String firstName = user.getFirstName() == null ? "" : user.getFirstName().trim();
-        String lastName  = user.getLastName()  == null ? "" : user.getLastName().trim();
-        String fullName  = (firstName + " " + lastName).trim();
-        if (fullName.isEmpty()) fullName = user.getUsername();
 
-        cookieAuthService.authenticateUser(new UserDTO(user.getId(), user.getEmail(), fullName, "MEMBER"));
         syncShellUser();
 
         return "/dashboard.xhtml?faces-redirect=true";
+    }
+
+    // Forwards the login response's session cookie so the browser stays authenticated after this self HTTP call.
+    private void forwardSessionCookie(HttpHeaders responseHeaders) {
+        List<String> setCookies = responseHeaders.get(HttpHeaders.SET_COOKIE);
+        if (setCookies == null) {
+            return;
+        }
+
+        Object servletResponse = FacesContext.getCurrentInstance().getExternalContext().getResponse();
+        if (!(servletResponse instanceof HttpServletResponse)) {
+            return;
+        }
+
+        HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
+        for (String setCookie : setCookies) {
+            httpResponse.addHeader(HttpHeaders.SET_COOKIE, setCookie);
+        }
     }
 
     private void syncShellUser() {
@@ -81,17 +119,6 @@ public class LoginBean implements Serializable {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
-    }
-
-    private <T> T resolveSpringBean(Class<T> beanType) {
-        FacesContext facesContext = FacesContext.getCurrentInstance();
-        if (facesContext == null) {
-            throw new IllegalStateException("FacesContext is not available");
-        }
-        ServletContext servletContext = (ServletContext) facesContext.getExternalContext().getContext();
-        WebApplicationContext applicationContext =
-            WebApplicationContextUtils.getRequiredWebApplicationContext(servletContext);
-        return applicationContext.getBean(beanType);
     }
 
     public String getEmail() { return email; }

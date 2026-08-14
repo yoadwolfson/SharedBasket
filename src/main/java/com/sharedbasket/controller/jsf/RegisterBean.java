@@ -1,20 +1,20 @@
 package com.sharedbasket.controller.jsf;
 
-import com.sharedbasket.domain.User;
-import com.sharedbasket.repo.UserRepository;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
+import com.sharedbasket.dto.RegisterRequestDTO;
+import com.sharedbasket.dto.UserDTO;
+import com.sharedbasket.util.JsfRestClientSupport;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
-import javax.servlet.ServletContext;
 import java.io.Serializable;
-import java.time.Instant;
 
 @ManagedBean(name = "registerBean")
 @RequestScoped
@@ -22,8 +22,7 @@ public class RegisterBean implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private transient UserRepository userRepository;
-    private transient PasswordEncoder passwordEncoder;
+    private transient RestTemplate restTemplate;
 
     private String email;
     private String username;
@@ -33,8 +32,7 @@ public class RegisterBean implements Serializable {
 
     @PostConstruct
     public void init() {
-        this.userRepository = resolveSpringBean(UserRepository.class);
-        this.passwordEncoder = new BCryptPasswordEncoder();
+        this.restTemplate = JsfRestClientSupport.resolveBean(RestTemplate.class);
     }
 
     public String register() {
@@ -46,27 +44,32 @@ public class RegisterBean implements Serializable {
         String normalizedEmail = email.trim().toLowerCase();
         String normalizedUsername = username.trim();
 
-        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
-            addGlobalError("This email is already registered.");
+        RegisterRequestDTO request = new RegisterRequestDTO();
+        request.setEmail(normalizedEmail);
+        request.setUsername(normalizedUsername);
+        request.setPassword(password);
+        request.setFirstName(isBlank(firstName) ? null : firstName.trim());
+        request.setLastName(isBlank(lastName) ? null : lastName.trim());
+
+        try {
+            UserDTO response = restTemplate.exchange(
+                JsfRestClientSupport.apiBaseUrl("/api/auth") + "/register",
+                HttpMethod.POST,
+                new HttpEntity<>(request, JsfRestClientSupport.buildJsonHeaders()),
+                UserDTO.class
+            ).getBody();
+
+            if (response == null) {
+                addGlobalError("Registration failed.");
+                return null;
+            }
+        } catch (HttpStatusCodeException ex) {
+            addGlobalError(JsfRestClientSupport.extractErrorMessage(ex));
+            return null;
+        } catch (Exception ex) {
+            addGlobalError("Registration is currently unavailable.");
             return null;
         }
-
-        if (userRepository.findByUsername(normalizedUsername).isPresent()) {
-            addGlobalError("This username is already taken.");
-            return null;
-        }
-
-        User user = new User();
-        user.setEmail(normalizedEmail);
-        user.setUsername(normalizedUsername);
-        user.setPasswordHash(passwordEncoder.encode(password));
-        user.setFirstName(isBlank(firstName) ? null : firstName.trim());
-        user.setLastName(isBlank(lastName) ? null : lastName.trim());
-        user.setEnabled(Boolean.TRUE);
-        user.setCreatedAt(Instant.now());
-        user.setUpdatedAt(Instant.now());
-
-        userRepository.save(user);
 
         FacesContext.getCurrentInstance().addMessage(
             null,
@@ -85,18 +88,6 @@ public class RegisterBean implements Serializable {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
-    }
-
-    private <T> T resolveSpringBean(Class<T> beanType) {
-        FacesContext facesContext = FacesContext.getCurrentInstance();
-        if (facesContext == null) {
-            throw new IllegalStateException("FacesContext is not available");
-        }
-
-        ServletContext servletContext = (ServletContext) facesContext.getExternalContext().getContext();
-        WebApplicationContext applicationContext =
-            WebApplicationContextUtils.getRequiredWebApplicationContext(servletContext);
-        return applicationContext.getBean(beanType);
     }
 
     public String getEmail() {

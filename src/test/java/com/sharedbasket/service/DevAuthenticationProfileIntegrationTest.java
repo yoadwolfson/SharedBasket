@@ -1,6 +1,6 @@
 package com.sharedbasket.service;
 
-import com.sharedbasket.service.impl.DevAuthenticationService;
+import com.sharedbasket.service.impl.CookieAuthenticationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,7 +27,7 @@ class DevAuthenticationProfileIntegrationTest {
     private AuthenticationService authenticationService;
 
     @Test
-    void devProfileUsesDevAuthenticationService() {
-        assertThat(authenticationService).isInstanceOf(DevAuthenticationService.class);
+    void devProfileUsesCookieAuthenticationService() {
+        assertThat(authenticationService).isInstanceOf(CookieAuthenticationService.class);
     }
 }

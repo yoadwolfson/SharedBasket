@@ -65,7 +65,7 @@ class AuthFlowIntegrationTest {
         ProfileUpdateRequestDTO profileUpdate = new ProfileUpdateRequestDTO();
         profileUpdate.setFirstName("Updated");
         profileUpdate.setLastName("Name");
-        profileUpdate.setUsername("updateduser");
+        profileUpdate.setUsername("upduser1");
 
         mockMvc.perform(put("/api/profile")
                 .session(session)
@@ -73,6 +73,50 @@ class AuthFlowIntegrationTest {
                 .content(objectMapper.writeValueAsString(profileUpdate)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.fullName").value("Updated Name"));
+    }
+
+    @Test
+    public void loginWithWrongPasswordIsRejected() throws Exception {
+        RegisterRequestDTO registerRequest = new RegisterRequestDTO();
+        registerRequest.setEmail("wrongpass@test.local");
+        registerRequest.setUsername("wrongpass");
+        registerRequest.setPassword("secret123");
+        registerRequest.setFirstName("Wrong");
+        registerRequest.setLastName("Pass");
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(registerRequest)))
+            .andExpect(status().isOk());
+
+        LoginRequestDTO loginRequest = new LoginRequestDTO();
+        loginRequest.setEmail("wrongpass@test.local");
+        loginRequest.setPassword("bad-password");
+
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest)))
+            .andExpect(status().isForbidden())
+            .andExpect(content().string(containsString("Invalid email or password")));
+    }
+
+    @Test
+    public void unauthenticatedProtectedEndpointsAreRejected() throws Exception {
+        ProfileUpdateRequestDTO profileUpdate = new ProfileUpdateRequestDTO();
+        profileUpdate.setFirstName("Anon");
+        profileUpdate.setLastName("User");
+        profileUpdate.setUsername("anonuser");
+
+        mockMvc.perform(get("/api/auth/me"))
+            .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/profile"))
+            .andExpect(status().isForbidden());
+
+        mockMvc.perform(put("/api/profile")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(profileUpdate)))
+            .andExpect(status().isForbidden());
     }
 
     @Test

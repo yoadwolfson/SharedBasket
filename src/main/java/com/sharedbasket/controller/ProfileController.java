@@ -7,6 +7,7 @@ import com.sharedbasket.exception.BadRequestException;
 import com.sharedbasket.exception.ForbiddenOperationException;
 import com.sharedbasket.repo.UserRepository;
 import com.sharedbasket.service.impl.CookieAuthenticationService;
+import com.sharedbasket.util.UserViewMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -35,8 +36,9 @@ public class ProfileController {
         if (currentUser == null) {
             throw new ForbiddenOperationException("Authentication required");
         }
-        User user = userRepository.findById(currentUser.getId()).orElseThrow(() -> new ForbiddenOperationException("Authentication required"));
-        return ResponseEntity.ok(mapToDto(user));
+        User user = userRepository.findById(currentUser.getId())
+            .orElseThrow(() -> new ForbiddenOperationException("Authentication required"));
+        return ResponseEntity.ok(UserViewMapper.toUserDto(user, "MEMBER"));
     }
 
     @PutMapping
@@ -46,7 +48,8 @@ public class ProfileController {
             throw new ForbiddenOperationException("Authentication required");
         }
 
-        User user = userRepository.findById(currentUser.getId()).orElseThrow(() -> new ForbiddenOperationException("Authentication required"));
+        User user = userRepository.findById(currentUser.getId())
+            .orElseThrow(() -> new ForbiddenOperationException("Authentication required"));
 
         if (userRepository.findByUsername(request.getUsername().trim()).filter(existing -> !existing.getId().equals(user.getId())).isPresent()) {
             throw new BadRequestException("A user with that username already exists");
@@ -58,22 +61,6 @@ public class ProfileController {
         user.setUpdatedAt(Instant.now());
         userRepository.save(user);
 
-        return ResponseEntity.ok(mapToDto(user));
-    }
-
-    private UserDTO mapToDto(User user) {
-        return new UserDTO(
-            user.getId(),
-            user.getEmail(),
-            buildDisplayName(user),
-            "MEMBER"
-        );
-    }
-
-    private String buildDisplayName(User user) {
-        String firstName = user.getFirstName() == null ? "" : user.getFirstName().trim();
-        String lastName = user.getLastName() == null ? "" : user.getLastName().trim();
-        String fullName = (firstName + " " + lastName).trim();
-        return fullName.isEmpty() ? user.getUsername() : fullName;
+        return ResponseEntity.ok(UserViewMapper.toUserDto(user, "MEMBER"));
     }
 }

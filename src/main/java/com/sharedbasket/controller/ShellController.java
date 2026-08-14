@@ -2,18 +2,22 @@ package com.sharedbasket.controller;
 
 import com.sharedbasket.dto.AlertDTO;
 import com.sharedbasket.dto.UserDTO;
-import com.sharedbasket.service.AuthenticationService;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
+import com.sharedbasket.util.JsfRestClientSupport;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
-import javax.servlet.ServletContext;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Shell Controller for Shared Basket Application
@@ -35,8 +39,9 @@ import java.util.List;
 public class ShellController implements Serializable {
     
     private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ShellController.class);
     
-    private AuthenticationService authenticationService;
+    private transient RestTemplate restTemplate;
     
     private List<AlertDTO> applicationAlerts;
     private UserDTO currentUser;
@@ -44,7 +49,7 @@ public class ShellController implements Serializable {
     @PostConstruct
     public void init() {
         this.applicationAlerts = new ArrayList<>();
-        this.authenticationService = resolveSpringBean(AuthenticationService.class);
+        this.restTemplate = JsfRestClientSupport.resolveBean(RestTemplate.class);
         initializeCurrentUser();
     }
     
@@ -111,7 +116,12 @@ public class ShellController implements Serializable {
      */
     public String logout() {
         try {
-            authenticationService.logout();
+            restTemplate.exchange(
+                JsfRestClientSupport.apiBaseUrl("/api/auth") + "/logout",
+                HttpMethod.POST,
+                new HttpEntity<>(JsfRestClientSupport.buildJsonHeaders()),
+                Void.class
+            );
             currentUser = null;
             clearAlerts();
             return "/login.xhtml?faces-redirect=true";
@@ -144,19 +154,6 @@ public class ShellController implements Serializable {
         }
     }
 
-    private <T> T resolveSpringBean(Class<T> beanType) {
-        FacesContext facesContext = FacesContext.getCurrentInstance();
-        if (facesContext == null) {
-            throw new IllegalStateException("FacesContext is not available");
-        }
-
-        ServletContext servletContext = (ServletContext) facesContext.getExternalContext().getContext();
-        WebApplicationContext applicationContext =
-            WebApplicationContextUtils.getRequiredWebApplicationContext(servletContext);
-
-        return applicationContext.getBean(beanType);
-    }
-    
     // ==================== Getters & Setters ====================
     
     public List<AlertDTO> getApplicationAlerts() {
@@ -168,13 +165,21 @@ public class ShellController implements Serializable {
     }
 
     public void syncCurrentUserFromAuthService() {
-        if (authenticationService == null) {
-            authenticationService = resolveSpringBean(AuthenticationService.class);
+        if (restTemplate == null) {
+            restTemplate = JsfRestClientSupport.resolveBean(RestTemplate.class);
         }
 
         try {
-            currentUser = authenticationService.getCurrentUser();
+            currentUser = restTemplate.exchange(
+                JsfRestClientSupport.apiBaseUrl("/api/auth") + "/me",
+                HttpMethod.GET,
+                new HttpEntity<>(JsfRestClientSupport.buildJsonHeaders()),
+                UserDTO.class
+            ).getBody();
+        } catch (HttpStatusCodeException e) {
+            currentUser = null;
         } catch (Exception e) {
+            LOGGER.warn("syncCurrentUser failed: {}", e.getMessage(), e);
             currentUser = null;
         }
     }

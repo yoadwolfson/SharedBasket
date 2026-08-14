@@ -2,12 +2,17 @@ package com.sharedbasket.controller.jsf;
 
 import com.sharedbasket.dto.ProfileUpdateRequestDTO;
 import com.sharedbasket.dto.UserDTO;
+import com.sharedbasket.util.JsfRestClientSupport;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
-import javax.faces.context.ExternalContext;
-import javax.faces.context.FacesContext;
 import java.io.Serializable;
 
 @ManagedBean(name = "profileBean")
@@ -22,47 +27,81 @@ public class ProfileBean implements Serializable {
     private String lastName;
     private String errorMessage;
 
-    public ProfileBean() {
+    private transient RestTemplate restTemplate;
+
+    @PostConstruct
+    public void init() {
+        this.restTemplate = JsfRestClientSupport.resolveBean(RestTemplate.class);
         loadProfile();
     }
 
     public String save() {
-        ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
-        RestTemplate restTemplate = new RestTemplate();
-        ProfileUpdateRequestDTO request = new ProfileUpdateRequestDTO();
-        request.setUsername(username);
-        request.setFirstName(firstName);
-        request.setLastName(lastName);
-
-        try {
-            UserDTO response = restTemplate.postForObject(context.getRequestScheme() + "://" + context.getRequestServerName() + ":" + context.getRequestServerPort() + context.getRequestContextPath() + "/api/profile", request, UserDTO.class);
-            if (response != null) {
-                errorMessage = null;
-                return null;
-            }
-        } catch (Exception ex) {
-            errorMessage = "Unable to update profile";
+        if (isBlank(username) || isBlank(firstName) || isBlank(lastName)) {
+            errorMessage = "First name, last name, and username are required";
             return null;
         }
 
-        errorMessage = "Unable to update profile";
-        return null;
+        ProfileUpdateRequestDTO request = new ProfileUpdateRequestDTO();
+        request.setUsername(username.trim());
+        request.setFirstName(firstName.trim());
+        request.setLastName(lastName.trim());
+
+        try {
+            UserDTO response = restTemplate.exchange(
+                JsfRestClientSupport.apiBaseUrl("/api/profile"),
+                HttpMethod.PUT,
+                new HttpEntity<>(request, JsfRestClientSupport.buildJsonHeaders()),
+                UserDTO.class
+            ).getBody();
+
+            if (response == null) {
+                errorMessage = "Unable to update profile";
+                return null;
+            }
+
+            this.email = response.getEmail();
+            this.username = response.getUsername();
+            this.firstName = response.getFirstName();
+            this.lastName = response.getLastName();
+            errorMessage = null;
+            return null;
+        } catch (HttpStatusCodeException ex) {
+            if (ex.getStatusCode() == HttpStatus.FORBIDDEN) {
+                errorMessage = "Authentication required";
+                return "/login.xhtml?faces-redirect=true";
+            }
+            errorMessage = JsfRestClientSupport.extractErrorMessage(ex);
+            return null;
+        }
     }
 
     private void loadProfile() {
-        ExternalContext context = FacesContext.getCurrentInstance().getExternalContext();
-        RestTemplate restTemplate = new RestTemplate();
         try {
-            UserDTO response = restTemplate.getForObject(context.getRequestScheme() + "://" + context.getRequestServerName() + ":" + context.getRequestServerPort() + context.getRequestContextPath() + "/api/profile", UserDTO.class);
-            if (response != null) {
-                this.email = response.getEmail();
-                this.username = response.getEmail() != null ? response.getEmail().split("@")[0] : null;
-                this.firstName = null;
-                this.lastName = null;
+            UserDTO response = restTemplate.exchange(
+                JsfRestClientSupport.apiBaseUrl("/api/profile"),
+                HttpMethod.GET,
+                new HttpEntity<>(JsfRestClientSupport.buildJsonHeaders()),
+                UserDTO.class
+            ).getBody();
+
+            if (response == null) {
+                this.errorMessage = "Unable to load profile";
+                return;
             }
+
+            this.email = response.getEmail();
+            this.username = response.getUsername();
+            this.firstName = response.getFirstName();
+            this.lastName = response.getLastName();
+            this.errorMessage = null;
         } catch (Exception ex) {
             this.errorMessage = "Unable to load profile";
         }
+    }
+
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 
     public String getEmail() {
