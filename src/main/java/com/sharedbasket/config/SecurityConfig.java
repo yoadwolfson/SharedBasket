@@ -4,15 +4,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-/**
- * Security Configuration for Shared Basket Application
- * 
- * Temporarily configured for development to allow viewing JSF pages
- * without authentication. This should be updated when Developer A
- * provides the actual authentication service.
- */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -20,14 +15,41 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeRequests()
-                .antMatchers("/resources/**", "/webjars/**", "/h2-console/**").permitAll()
-                .antMatchers("/**/*.xhtml", "/**/*.jsf", "/").permitAll()
-                .anyRequest().permitAll()
-            .and()
-                .csrf().disable()
-                .headers().frameOptions().disable();
-        
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                    new AntPathRequestMatcher("/api/auth/register"),
+                    new AntPathRequestMatcher("/api/auth/login"),
+                    new AntPathRequestMatcher("/javax.faces.resource/**"),
+                    new AntPathRequestMatcher("/resources/**"),
+                    new AntPathRequestMatcher("/webjars/**"),
+                    new AntPathRequestMatcher("/h2-console/**"),
+                    new AntPathRequestMatcher("/**/*.xhtml"),
+                    new AntPathRequestMatcher("/**/*.jsf"),
+                    new AntPathRequestMatcher("/")
+                ).permitAll()
+                .requestMatchers(
+                    new AntPathRequestMatcher("/api/auth/me"),
+                    new AntPathRequestMatcher("/api/auth/logout"),
+                    new AntPathRequestMatcher("/api/profile/**")
+                ).authenticated()
+                .anyRequest().authenticated()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login.xhtml")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID")
+                .permitAll()
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                .sessionFixation(sessionFixation -> sessionFixation.changeSessionId())
+            )
+            .csrf(csrf -> csrf.disable())
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+            .formLogin(form -> form.disable());
+
         return http.build();
     }
 }

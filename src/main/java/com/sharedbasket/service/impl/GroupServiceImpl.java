@@ -290,7 +290,7 @@ public class GroupServiceImpl implements GroupService {
             throw new ForbiddenOperationException("You are not allowed to view members");
         }
 
-        return groupMemberRepository.findByShoppingGroup_Id(groupId)
+        return groupMemberRepository.findByShoppingGroup_IdAndStatus(groupId, STATUS_ACCEPTED)
             .stream()
             .map(this::toMemberDTO)
             .collect(Collectors.toList());

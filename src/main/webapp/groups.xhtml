@@ -26,8 +26,8 @@
                 </div>
                 <div class="sb-header-right">
                     <div class="sb-user-info">
-                        <span class="sb-user-email">dev@sharedbasket.local</span>
-                        <span class="sb-user-name">Dev User</span>
+                        <span class="sb-user-email">#{shellController.currentUser != null ? shellController.currentUser.email : 'Guest user'}</span>
+                        <span class="sb-user-name">#{shellController.currentUser != null ? shellController.currentUser.fullName : '(not logged in)'}</span>
                     </div>
                 </div>
             </div>
@@ -36,11 +36,11 @@
         <nav class="sb-main-nav" role="navigation">
             <div class="sb-nav-container">
                 <ul class="sb-nav-menu">
-                    <li class="sb-nav-item"><a class="sb-nav-link" href="/dashboard.xhtml">Dashboard</a></li>
-                    <li class="sb-nav-item"><a class="sb-nav-link" href="/shopping-list.xhtml">Shopping List</a></li>
-                    <li class="sb-nav-item"><a class="sb-nav-link" href="/groups.xhtml">Groups</a></li>
-                    <li class="sb-nav-item"><a class="sb-nav-link" href="/reports.xhtml">Reports</a></li>
-                    <li class="sb-nav-item"><a class="sb-nav-link" href="/recommendations.xhtml">Recommendations</a></li>
+                    <li class="sb-nav-item"><a class="sb-nav-link" href="/dashboard.xhtml">📊 Dashboard</a></li>
+                    <li class="sb-nav-item"><a class="sb-nav-link" href="/shopping-list.xhtml">🛒 Shopping List</a></li>
+                    <li class="sb-nav-item"><a class="sb-nav-link" href="/groups.xhtml">👥 Groups</a></li>
+                    <li class="sb-nav-item"><a class="sb-nav-link" href="/reports.xhtml">📈 Reports</a></li>
+                    <li class="sb-nav-item"><a class="sb-nav-link" href="/recommendations.xhtml">💡 Recommendations</a></li>
                 </ul>
             </div>
         </nav>
@@ -87,7 +87,7 @@
                                 <h:message for="inviteCode" styleClass="sb-field-error" />
                             </div>
                             <h:commandButton value="Join Group" action="#{groupsController.joinByCode}"
-                                             styleClass="sb-btn sb-btn-secondary sb-btn-block" />
+                                                 styleClass="sb-btn sb-btn-primary sb-btn-block" />
                         </h:form>
 
                         <h:form id="requestGroupForm" styleClass="sb-widget sb-groups-card">
@@ -101,7 +101,7 @@
                                 <h:message for="requestGroupId" styleClass="sb-field-error" />
                             </div>
                             <h:commandButton value="Send Request" action="#{groupsController.requestToJoin}"
-                                             styleClass="sb-btn sb-btn-secondary sb-btn-block" />
+                                             styleClass="sb-btn sb-btn-primary sb-btn-block" />
                         </h:form>
 
                     </div>
@@ -156,7 +156,7 @@
                                                 <td>
                                                     <h:form>
                                                         <h:commandButton value="Open"
-                                                                         styleClass="sb-btn sb-btn-secondary"
+                                                                         styleClass="sb-btn sb-btn-success"
                                                                          action="#{groupsController.selectGroup(group.id)}" />
                                                     </h:form>
                                                 </td>
@@ -189,7 +189,7 @@
                         <h:form id="groupActionsForm" styleClass="sb-action-buttons">
                             <h:commandButton value="Leave Group"
                                              action="#{groupsController.leaveSelectedGroup}"
-                                             styleClass="sb-btn sb-btn-secondary" />
+                                             styleClass="sb-btn sb-btn-danger" />
                             <h:commandButton value="Regenerate Invite Code"
                                              action="#{groupsController.regenerateInviteCode}"
                                              styleClass="sb-btn sb-btn-primary"
@@ -238,7 +238,7 @@
                                                 <td>
                                                     <h:form rendered="#{groupsController.selectedGroupAdmin}">
                                                         <h:commandButton value="Remove"
-                                                                         styleClass="sb-btn sb-btn-secondary"
+                                                                             styleClass="sb-btn sb-btn-danger"
                                                                          action="#{groupsController.removeMember(member.userId)}" />
                                                     </h:form>
                                                 </td>

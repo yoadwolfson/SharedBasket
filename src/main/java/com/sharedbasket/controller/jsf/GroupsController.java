@@ -321,10 +321,25 @@ public class GroupsController implements Serializable {
                 selectedPendingRequests = Collections.emptyList();
             }
         } catch (Exception ex) {
+            if (isMembershipLost(ex)) {
+                selectedGroupId = null;
+                selectedMembers = Collections.emptyList();
+                selectedPendingRequests = Collections.emptyList();
+                reloadGroups();
+                return;
+            }
             addError(extractErrorMessage(ex));
             selectedMembers = Collections.emptyList();
             selectedPendingRequests = Collections.emptyList();
         }
+    }
+
+    private boolean isMembershipLost(Exception ex) {
+        if (!(ex instanceof HttpStatusCodeException)) {
+            return false;
+        }
+        int statusCode = ((HttpStatusCodeException) ex).getRawStatusCode();
+        return statusCode == 403 || statusCode == 404;
     }
     /**
      * Builds HTTP headers for JSON requests, including content type, accept type, and cookies from the current request.
