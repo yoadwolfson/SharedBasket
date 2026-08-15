@@ -32,22 +32,25 @@
                      Expected: UserDTO with id, email, fullName properties from Developer A. -->
                 
                 <div class="sb-user-info">
-                    <span class="sb-user-email">Guest user</span>
-                    <span class="sb-user-name">(waiting for Developer A session)</span>
+                    <span class="sb-user-email">#{shellController.currentUser != null ? shellController.currentUser.email : 'Guest user'}</span>
+                    <span class="sb-user-name">#{shellController.currentUser != null ? shellController.currentUser.fullName : '(not logged in)'}</span>
                 </div>
                 
                 <!-- Quick Actions -->
-                <div class="sb-header-actions">
-                    <h:form>
-                        <h:commandLink value="Profile" 
-                                       action="#{shellController.navigateToProfile}"
-                                       styleClass="sb-header-action-link" />
-                        <span class="sb-action-separator">|</span>
-                        <h:commandLink value="Logout" 
-                                       action="#{shellController.logout}"
-                                       styleClass="sb-header-action-link sb-logout-link" />
+                <h:panelGroup styleClass="sb-header-actions" rendered="#{shellController.authenticated}">
+                    <h:outputLink value="#{request.contextPath}/profile.xhtml" styleClass="sb-header-action-link">
+                        Profile
+                    </h:outputLink>
+                    <span class="sb-action-separator">|</span>
+                    <h:form style="display:inline;">
+                        <h:commandLink action="#{shellController.logout}" styleClass="sb-header-action-link sb-logout-link" value="Logout" />
                     </h:form>
-                </div>
+                </h:panelGroup>
+                <h:panelGroup styleClass="sb-header-actions" rendered="#{not shellController.authenticated}">
+                    <h:outputLink value="#{request.contextPath}/login.xhtml" styleClass="sb-header-action-link">
+                        Login
+                    </h:outputLink>
+                </h:panelGroup>
             </div>
         </div>
     </header>

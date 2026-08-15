@@ -45,7 +45,6 @@
 
     <session-config>
         <cookie-config>
-            <secure>true</secure>
             <http-only>true</http-only>
         </cookie-config>
         <tracking-mode>COOKIE</tracking-mode>

@@ -2,18 +2,22 @@ package com.sharedbasket.controller.jsf;
 
 import com.sharedbasket.dto.AlertDTO;
 import com.sharedbasket.dto.UserDTO;
-import com.sharedbasket.service.AuthenticationService;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
+import com.sharedbasket.util.JsfRestClientSupport;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
-import javax.servlet.ServletContext;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Shell Controller for Shared Basket Application
@@ -35,8 +39,9 @@ import java.util.List;
 public class ShellController implements Serializable {
     
     private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ShellController.class);
     
-    private AuthenticationService authenticationService;
+    private transient RestTemplate restTemplate;
     
     private List<AlertDTO> applicationAlerts;
     private UserDTO currentUser;
@@ -44,7 +49,7 @@ public class ShellController implements Serializable {
     @PostConstruct
     public void init() {
         this.applicationAlerts = new ArrayList<>();
-        this.authenticationService = resolveSpringBean(AuthenticationService.class);
+        this.restTemplate = JsfRestClientSupport.resolveBean(RestTemplate.class);
         initializeCurrentUser();
     }
     
@@ -57,7 +62,7 @@ public class ShellController implements Serializable {
      */
     private void initializeCurrentUser() {
         try {
-            this.currentUser = authenticationService.getCurrentUser();
+            syncCurrentUserFromAuthService();
             if (currentUser == null) {
                 redirectToLogin();
             }
@@ -98,7 +103,7 @@ public class ShellController implements Serializable {
      * Navigate to user profile.
      */
     public String navigateToProfile() {
-        return "redirect:/profile.jsf";
+        return "/profile.xhtml?faces-redirect=true";
     }
     
     /**
@@ -111,9 +116,15 @@ public class ShellController implements Serializable {
      */
     public String logout() {
         try {
-            authenticationService.logout();
+            restTemplate.exchange(
+                JsfRestClientSupport.apiBaseUrl("/api/auth") + "/logout",
+                HttpMethod.POST,
+                new HttpEntity<>(JsfRestClientSupport.buildJsonHeaders()),
+                Void.class
+            );
+            currentUser = null;
             clearAlerts();
-            return "redirect:/login.jsf";
+            return "/login.xhtml?faces-redirect=true";
         } catch (Exception e) {
             addErrorAlert("Error during logout: " + e.getMessage());
             return null;
@@ -124,34 +135,66 @@ public class ShellController implements Serializable {
      * Redirect to login page when user is not authenticated.
      */
     private void redirectToLogin() {
+        FacesContext fc = FacesContext.getCurrentInstance();
+        if (fc == null) {
+            return;
+        }
+
+        String viewId = fc.getViewRoot() != null ? fc.getViewRoot().getViewId() : "";
+        if ("/login.xhtml".equals(viewId) || "/register.xhtml".equals(viewId)) {
+            return;
+        }
+
         try {
-            FacesContext.getCurrentInstance().getExternalContext().redirect(
-                FacesContext.getCurrentInstance().getExternalContext().getRequestContextPath() 
-                + "/login.xhtml"
+            fc.getExternalContext().redirect(
+                fc.getExternalContext().getRequestContextPath() + "/login.xhtml"
             );
         } catch (Exception e) {
             // Log error but continue
         }
     }
 
-    private <T> T resolveSpringBean(Class<T> beanType) {
-        FacesContext facesContext = FacesContext.getCurrentInstance();
-        if (facesContext == null) {
-            throw new IllegalStateException("FacesContext is not available");
-        }
-
-        ServletContext servletContext = (ServletContext) facesContext.getExternalContext().getContext();
-        WebApplicationContext applicationContext =
-            WebApplicationContextUtils.getRequiredWebApplicationContext(servletContext);
-        return applicationContext.getBean(beanType);
+    // ==================== Getters & Setters ====================
+    
+    public List<AlertDTO> getApplicationAlerts() {
+        return applicationAlerts;
     }
     
-    // Getters and Setters    
-    public List<AlertDTO> getApplicationAlerts() {return applicationAlerts;}
+    public void setApplicationAlerts(List<AlertDTO> applicationAlerts) {
+        this.applicationAlerts = applicationAlerts;
+    }
+
+    public void syncCurrentUserFromAuthService() {
+        if (restTemplate == null) {
+            restTemplate = JsfRestClientSupport.resolveBean(RestTemplate.class);
+        }
+
+        try {
+            currentUser = restTemplate.exchange(
+                JsfRestClientSupport.apiBaseUrl("/api/auth") + "/me",
+                HttpMethod.GET,
+                new HttpEntity<>(JsfRestClientSupport.buildJsonHeaders()),
+                UserDTO.class
+            ).getBody();
+        } catch (HttpStatusCodeException e) {
+            currentUser = null;
+        } catch (Exception e) {
+            LOGGER.warn("syncCurrentUser failed: {}", e.getMessage(), e);
+            currentUser = null;
+        }
+    }
+
+    public UserDTO getCurrentUser() {
+        syncCurrentUserFromAuthService();
+        return currentUser;
+    }
+
+    public boolean isAuthenticated() {
+        syncCurrentUserFromAuthService();
+        return currentUser != null;
+    }
     
-    public void setApplicationAlerts(List<AlertDTO> applicationAlerts) {this.applicationAlerts = applicationAlerts;}
-    
-    public UserDTO getCurrentUser() {return currentUser;}
-    
-    public void setCurrentUser(UserDTO currentUser) {this.currentUser = currentUser;}
+    public void setCurrentUser(UserDTO currentUser) {
+        this.currentUser = currentUser;
+    }
 }
