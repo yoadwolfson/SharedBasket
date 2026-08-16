@@ -1,6 +1,7 @@
 package com.sharedbasket.controller.jsf;
 
 import com.sharedbasket.dto.AlertDTO;
+import com.sharedbasket.dto.GroupDTO;
 import com.sharedbasket.dto.UserDTO;
 import com.sharedbasket.util.JsfRestClientSupport;
 
@@ -45,6 +46,8 @@ public class ShellController implements Serializable {
     
     private List<AlertDTO> applicationAlerts;
     private UserDTO currentUser;
+    private Long currentGroupId;
+    private String currentGroupName;
     
     @PostConstruct
     public void init() {
@@ -187,6 +190,44 @@ public class ShellController implements Serializable {
     public UserDTO getCurrentUser() {
         syncCurrentUserFromAuthService();
         return currentUser;
+    }
+
+    /**
+     * Resolves the group used for dashboard/reports/recommendations scoping.
+     * Only the first accepted group is used - there is no multi-group switcher yet.
+     */
+    public Long getCurrentGroupId() {
+        if (currentGroupId == null) {
+            resolveCurrentGroup();
+        }
+        return currentGroupId;
+    }
+
+    public String getCurrentGroupName() {
+        if (currentGroupId == null) {
+            resolveCurrentGroup();
+        }
+        return currentGroupName;
+    }
+
+    private void resolveCurrentGroup() {
+        if (restTemplate == null) {
+            restTemplate = JsfRestClientSupport.resolveBean(RestTemplate.class);
+        }
+        try {
+            GroupDTO[] groups = restTemplate.exchange(
+                JsfRestClientSupport.apiBaseUrl("/api/groups"),
+                HttpMethod.GET,
+                new HttpEntity<>(JsfRestClientSupport.buildJsonHeaders()),
+                GroupDTO[].class
+            ).getBody();
+            if (groups != null && groups.length > 0) {
+                currentGroupId = groups[0].getId();
+                currentGroupName = groups[0].getName();
+            }
+        } catch (Exception e) {
+            LOGGER.warn("resolveCurrentGroup failed: {}", e.getMessage(), e);
+        }
     }
 
     public boolean isAuthenticated() {

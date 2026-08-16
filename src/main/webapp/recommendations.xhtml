@@ -12,10 +12,50 @@
     <ui:define name="content">
         <div class="sb-recommendations-container">
             <h2 class="sb-page-title">Recommendations &amp; Decision Support</h2>
+            <p class="sb-groups-intro">Frequently and recently purchased items for your group, ready to add back to the shopping list.</p>
 
-            <div class="sb-recommendations-content">
-                <p class="sb-placeholder-text">Recommendations and decision support feature - Phase 5 implementation</p>
-            </div>
+            <h:panelGroup id="recAlertsPanel" layout="block">
+                <ui:repeat value="#{recommendationsController.alerts}" var="alert">
+                    <div class="sb-alert sb-alert-#{alert.type}">
+                        <h:outputText value="#{alert.message}" />
+                    </div>
+                </ui:repeat>
+            </h:panelGroup>
+
+            <h:panelGroup id="recContentPanel" layout="block">
+                <h:panelGroup layout="block" rendered="#{empty recommendationsController.recommendations and empty recommendationsController.alerts}">
+                    <p class="sb-placeholder-text">Loading recommendations...</p>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" rendered="#{empty recommendationsController.recommendations and not empty recommendationsController.alerts}">
+                    <p class="sb-placeholder-text">No recommendations yet - purchase history will populate this list over time.</p>
+                </h:panelGroup>
+
+                <h:form id="recommendationsForm" rendered="#{not empty recommendationsController.recommendations}">
+                    <div class="sb-recommendations-list">
+                        <ui:repeat var="rec" value="#{recommendationsController.recommendations}">
+                            <div class="sb-recommendation-item">
+                                <h:selectBooleanCheckbox value="#{recommendationsController.selectedMap[rec.itemName]}" />
+                                <span class="sb-rec-item-name">#{rec.itemName}</span>
+                                <span class="sb-rec-category">#{rec.categoryName}</span>
+                                <span class="sb-rec-frequency">Frequency: #{rec.frequency}</span>
+                                <span class="sb-rec-rationale">#{rec.rationale}</span>
+                                <span class="sb-rec-price">Est. $#{rec.estimatedUnitPrice}</span>
+                            </div>
+                        </ui:repeat>
+                    </div>
+                    <div class="sb-action-buttons">
+                        <h:commandButton value="Add Selected to Shopping List" action="#{recommendationsController.rebuildSelected}"
+                                         styleClass="sb-btn sb-btn-primary">
+                            <f:ajax execute="@form" render=":recAlertsPanel :recContentPanel" />
+                        </h:commandButton>
+                        <h:commandButton value="Refresh" action="#{recommendationsController.reloadRecommendations}"
+                                         styleClass="sb-btn sb-btn-primary">
+                            <f:ajax execute="@form" render=":recAlertsPanel :recContentPanel" />
+                        </h:commandButton>
+                    </div>
+                </h:form>
+            </h:panelGroup>
         </div>
     </ui:define>
 
