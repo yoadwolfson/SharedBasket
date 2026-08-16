@@ -3,6 +3,7 @@ package com.sharedbasket.exception;
 import com.sharedbasket.dto.ErrorResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -29,6 +30,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConflictOperationException.class)
     public ResponseEntity<ErrorResponseDTO> handleConflict(ConflictOperationException ex) {
         return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseDTO> handleValidation(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+            .findFirst()
+            .map(error -> error.getDefaultMessage())
+            .orElse("Request validation failed");
+        return build(HttpStatus.BAD_REQUEST, message);
     }
 
     @ExceptionHandler(Exception.class)

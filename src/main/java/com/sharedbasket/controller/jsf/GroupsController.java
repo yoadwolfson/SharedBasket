@@ -5,6 +5,7 @@ import com.sharedbasket.dto.CreateGroupRequestDTO;
 import com.sharedbasket.dto.GroupDTO;
 import com.sharedbasket.dto.GroupMemberDTO;
 import com.sharedbasket.dto.JoinByCodeRequestDTO;
+import com.sharedbasket.util.JsfRestClientSupport;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -47,6 +48,9 @@ public class GroupsController implements Serializable {
     private String createGroupName;
     private String joinInviteCode;
     private String requestGroupId;
+
+    private String lastPollSignature;
+    private String pollRenderTargets = "";
 
     private List<AlertDTO> alerts;
     /**
@@ -256,6 +260,33 @@ public class GroupsController implements Serializable {
         return selected != null && "ADMIN".equals(selected.getMyRole()) && "ACCEPTED".equals(selected.getMyStatus());
     }
     /**
+     * Checks whether the given member user ID belongs to the currently logged-in user.
+     * @param memberUserId The user ID of the member to check.
+     * @return true if the member is the current user, false otherwise.
+     */
+    public boolean isCurrentUser(Long memberUserId) {
+        ShellController shell = resolveShellController();
+        return shell != null
+            && shell.getCurrentUser() != null
+            && shell.getCurrentUser().getId() != null
+            && shell.getCurrentUser().getId().equals(memberUserId);
+    }
+    /**
+     * Resolves the session-scoped ShellController bean directly via EL, since @ManagedProperty
+     * injection is not populated by this app's JSF managed-bean setup.
+     */
+    private ShellController resolveShellController() {
+        if (shellController != null) {
+            return shellController;
+        }
+        FacesContext facesContext = FacesContext.getCurrentInstance();
+        if (facesContext == null) {
+            return null;
+        }
+        return facesContext.getApplication()
+            .evaluateExpressionGet(facesContext, "#{shellController}", ShellController.class);
+    }
+    /**
      * Gets the currently selected group based on the selectedGroupId.
      * @return The GroupDTO of the selected group, or null if no group is selected or found.
      */
@@ -269,6 +300,38 @@ public class GroupsController implements Serializable {
             }
         }
         return null;
+    }
+    /**
+     * Silently refreshes groups and the selected group's data for background ajax polling.
+     */
+    public void pollRefresh() {
+        reloadGroups();
+        String signature = pollSignature();
+        // Only ask the client to replace the DOM when something actually changed, otherwise a
+        // periodic no-op render can swallow a user's click on a button mid-swap.
+        pollRenderTargets = signature.equals(lastPollSignature) ? "" : ":alertsPanel :groupsListPanel :groupDetailPanel";
+        lastPollSignature = signature;
+    }
+
+    /**
+     * Builds a lightweight signature of the currently loaded groups/members/requests/alerts,
+     * used to detect whether a background poll actually changed anything worth rendering.
+     */
+    private String pollSignature() {
+        StringBuilder sb = new StringBuilder();
+        for (GroupDTO group : groups) {
+            sb.append("g:").append(group.getId()).append(':').append(group.getMyRole())
+                .append(':').append(group.getMyStatus()).append(':').append(group.getInviteCode()).append(';');
+        }
+        for (GroupMemberDTO member : selectedMembers) {
+            sb.append("m:").append(member.getId()).append(':').append(member.getRole())
+                .append(':').append(member.getStatus()).append(';');
+        }
+        for (GroupMemberDTO request : selectedPendingRequests) {
+            sb.append("r:").append(request.getId()).append(':').append(request.getStatus()).append(';');
+        }
+        sb.append("a:").append(alerts.size());
+        return sb.toString();
     }
     /**
      * Reloads the list of groups from the API.
@@ -346,37 +409,14 @@ public class GroupsController implements Serializable {
      * @return HttpHeaders configured for JSON requests.
      */
     private HttpHeaders buildJsonHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-
-        HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance()
-            .getExternalContext()
-            .getRequest();
-        String cookie = request.getHeader("Cookie");
-        if (cookie != null && !cookie.trim().isEmpty()) {
-            headers.add(HttpHeaders.COOKIE, cookie);
-        }
-        return headers;
+        return JsfRestClientSupport.buildJsonHeaders();
     }
     /**
      * Constructs the base URL for the groups API based on the current request's scheme, host, port, and context path.
      * @return The base URL for the groups API.
      */
     private String groupsApiBaseUrl() {
-        HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance()
-            .getExternalContext()
-            .getRequest();
-
-        String scheme = request.getScheme();
-        String host = request.getServerName();
-        int port = request.getServerPort();
-        String contextPath = request.getContextPath() == null ? "" : request.getContextPath();
-
-        boolean defaultPort = ("http".equalsIgnoreCase(scheme) && port == 80)
-            || ("https".equalsIgnoreCase(scheme) && port == 443);
-        String base = scheme + "://" + host + (defaultPort ? "" : ":" + port) + contextPath;
-        return base + "/api/groups";
+        return JsfRestClientSupport.apiBaseUrl("/api/groups");
     }
     /**
      * Extracts a user-friendly error message from an exception, particularly handling HttpStatusCodeException to retrieve the response body if available.
@@ -424,6 +464,8 @@ public class GroupsController implements Serializable {
     }
  //   Getters and Setters
     public List<GroupDTO> getGroups() {return groups;}
+
+    public String getPollRenderTargets() {return pollRenderTargets;}
 
     public List<GroupMemberDTO> getSelectedMembers() {return selectedMembers;}
 

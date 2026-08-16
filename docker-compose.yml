@@ -22,6 +22,7 @@ services:
       dockerfile: Dockerfile
     environment:
       SPRING_PROFILES_ACTIVE: dev
+      SHAREDBASKET_API_BASE_URL: http://localhost:8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/sharedbasket_dev
       SPRING_DATASOURCE_USERNAME: sharedbasket
       SPRING_DATASOURCE_PASSWORD: sharedbasket

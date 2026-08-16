@@ -53,11 +53,13 @@
                     <p class="sb-groups-intro">Create a group, join by invite code, or manage members and requests from one screen.</p>
 
                     <!-- Alerts from backing bean -->
-                    <ui:repeat value="#{groupsController.alerts}" var="alert">
-                        <div class="sb-alert sb-alert-#{alert.type}">
-                            <h:outputText value="#{alert.message}" />
-                        </div>
-                    </ui:repeat>
+                    <h:panelGroup id="alertsPanel" layout="block">
+                        <ui:repeat value="#{groupsController.alerts}" var="alert">
+                            <div class="sb-alert sb-alert-#{alert.type}">
+                                <h:outputText value="#{alert.message}" />
+                            </div>
+                        </ui:repeat>
+                    </h:panelGroup>
 
                     <!-- Action forms -->
                     <div class="sb-groups-grid">
@@ -73,7 +75,9 @@
                                 <h:message for="groupName" styleClass="sb-field-error" />
                             </div>
                             <h:commandButton value="Create Group" action="#{groupsController.createGroup}"
-                                             styleClass="sb-btn sb-btn-primary sb-btn-block" />
+                                             styleClass="sb-btn sb-btn-primary sb-btn-block">
+                                <f:ajax execute="@form" render=":alertsPanel :groupsListPanel" />
+                            </h:commandButton>
                         </h:form>
 
                         <h:form id="joinCodeForm" styleClass="sb-widget sb-groups-card">
@@ -87,7 +91,9 @@
                                 <h:message for="inviteCode" styleClass="sb-field-error" />
                             </div>
                             <h:commandButton value="Join Group" action="#{groupsController.joinByCode}"
-                                                 styleClass="sb-btn sb-btn-primary sb-btn-block" />
+                                                 styleClass="sb-btn sb-btn-primary sb-btn-block">
+                                <f:ajax execute="@form" render=":alertsPanel :groupsListPanel" />
+                            </h:commandButton>
                         </h:form>
 
                         <h:form id="requestGroupForm" styleClass="sb-widget sb-groups-card">
@@ -101,7 +107,9 @@
                                 <h:message for="requestGroupId" styleClass="sb-field-error" />
                             </div>
                             <h:commandButton value="Send Request" action="#{groupsController.requestToJoin}"
-                                             styleClass="sb-btn sb-btn-primary sb-btn-block" />
+                                             styleClass="sb-btn sb-btn-primary sb-btn-block">
+                                <f:ajax execute="@form" render=":alertsPanel" />
+                            </h:commandButton>
                         </h:form>
 
                     </div>
@@ -111,6 +119,7 @@
                         <h3 class="sb-widget-title">My Groups</h3>
                         <p class="sb-groups-card-copy">Your accepted memberships appear here with the current invite code and access level.</p>
 
+                        <h:panelGroup id="groupsListPanel" layout="block">
                         <h:panelGroup rendered="#{empty groupsController.groups}">
                             <p class="sb-placeholder-text">You are not a member of any group yet.</p>
                         </h:panelGroup>
@@ -157,7 +166,9 @@
                                                     <h:form>
                                                         <h:commandButton value="Open"
                                                                          styleClass="sb-btn sb-btn-success"
-                                                                         action="#{groupsController.selectGroup(group.id)}" />
+                                                                         action="#{groupsController.selectGroup(group.id)}">
+                                                            <f:ajax execute="@this" render=":alertsPanel :groupDetailPanel" />
+                                                        </h:commandButton>
                                                     </h:form>
                                                 </td>
                                             </tr>
@@ -166,9 +177,11 @@
                                 </table>
                             </div>
                         </h:panelGroup>
+                        </h:panelGroup>
                     </section>
 
                     <!-- Selected group detail (visible once a group is opened) -->
+                    <h:panelGroup id="groupDetailPanel" layout="block">
                     <h:panelGroup rendered="#{groupsController.selectedGroupId != null}"
                                   styleClass="sb-widget sb-groups-section sb-groups-detail" layout="block">
 
@@ -189,11 +202,15 @@
                         <h:form id="groupActionsForm" styleClass="sb-action-buttons">
                             <h:commandButton value="Leave Group"
                                              action="#{groupsController.leaveSelectedGroup}"
-                                             styleClass="sb-btn sb-btn-danger" />
+                                             styleClass="sb-btn sb-btn-danger">
+                                <f:ajax execute="@this" render=":alertsPanel :groupsListPanel :groupDetailPanel" />
+                            </h:commandButton>
                             <h:commandButton value="Regenerate Invite Code"
                                              action="#{groupsController.regenerateInviteCode}"
                                              styleClass="sb-btn sb-btn-primary"
-                                             rendered="#{groupsController.selectedGroupAdmin}" />
+                                             rendered="#{groupsController.selectedGroupAdmin}">
+                                <f:ajax execute="@this" render=":alertsPanel :groupDetailPanel" />
+                            </h:commandButton>
                         </h:form>
 
                         <!-- Members table -->
@@ -236,10 +253,12 @@
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <h:form rendered="#{groupsController.selectedGroupAdmin}">
+                                                    <h:form rendered="#{groupsController.selectedGroupAdmin and not groupsController.isCurrentUser(member.userId)}">
                                                         <h:commandButton value="Remove"
                                                                              styleClass="sb-btn sb-btn-danger"
-                                                                         action="#{groupsController.removeMember(member.userId)}" />
+                                                                         action="#{groupsController.removeMember(member.userId)}">
+                                                            <f:ajax execute="@this" render=":alertsPanel :groupDetailPanel" />
+                                                        </h:commandButton>
                                                     </h:form>
                                                 </td>
                                             </tr>
@@ -282,11 +301,15 @@
                                                     <h:form>
                                                         <h:commandButton value="Approve"
                                                                          styleClass="sb-btn sb-btn-primary"
-                                                                         action="#{groupsController.approveRequest(req.id)}" />
+                                                                         action="#{groupsController.approveRequest(req.id)}">
+                                                            <f:ajax execute="@this" render=":alertsPanel :groupDetailPanel" />
+                                                        </h:commandButton>
                                                         <h:outputText value="&#160;" />
                                                         <h:commandButton value="Reject"
                                                                          styleClass="sb-btn sb-btn-secondary"
-                                                                         action="#{groupsController.rejectRequest(req.id)}" />
+                                                                         action="#{groupsController.rejectRequest(req.id)}">
+                                                            <f:ajax execute="@this" render=":alertsPanel :groupDetailPanel" />
+                                                        </h:commandButton>
                                                     </h:form>
                                                 </td>
                                             </tr>
@@ -297,11 +320,41 @@
                         </h:panelGroup>
 
                     </h:panelGroup>
+                    </h:panelGroup>
 
                 </div>
             </div>
         </main>
     </div>
+
+    <!-- Background poll: keeps this screen (and any other open group screen, e.g. the requester's) in sync
+         with approvals/changes made elsewhere, without a manual page reload. -->
+    <h:form id="pollForm" style="display:none;">
+        <h:commandButton id="pollBtn" value="poll" action="#{groupsController.pollRefresh}">
+            <f:ajax execute="@this" render="#{groupsController.pollRenderTargets}" />
+        </h:commandButton>
+    </h:form>
+    <script type="text/javascript">
+        (function () {
+            var sbAjaxBusy = false;
+            if (typeof jsf !== 'undefined' &amp;&amp; jsf.ajax) {
+                jsf.ajax.addOnEvent(function (data) {
+                    sbAjaxBusy = data.status === 'begin';
+                });
+            }
+            setInterval(function () {
+                // Skip this tick if an ajax request (poll or user action) is already in flight,
+                // otherwise overlapping requests corrupt the shared JSF view state.
+                if (sbAjaxBusy) {
+                    return;
+                }
+                var pollButton = document.getElementById('pollForm:pollBtn');
+                if (pollButton) {
+                    pollButton.click();
+                }
+            }, 4000);
+        })();
+    </script>
 </h:body>
 
 </html>

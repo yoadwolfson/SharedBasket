@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -89,6 +90,9 @@ public class GroupServiceImpl implements GroupService {
     public List<GroupDTO> listMyGroups(Long currentUserId) {
         return groupMemberRepository.findByUser_IdAndStatus(currentUserId, STATUS_ACCEPTED)
             .stream()
+            // Stable order is required: the JSF page re-fetches this list on every poll and
+            // matches rows by index, so an unordered DB result can make "Open" pick the wrong group.
+            .sorted(Comparator.comparing(member -> member.getShoppingGroup().getId()))
             .map(member -> toGroupDTO(member.getShoppingGroup(), member))
             .collect(Collectors.toList());
     }
@@ -209,6 +213,7 @@ public class GroupServiceImpl implements GroupService {
         requireAcceptedAdmin(groupId, currentUserId);
         return groupMemberRepository.findByShoppingGroup_IdAndStatus(groupId, STATUS_PENDING)
             .stream()
+            .sorted(Comparator.comparing(GroupMember::getId))
             .map(this::toMemberDTO)
             .collect(Collectors.toList());
     }
@@ -292,6 +297,7 @@ public class GroupServiceImpl implements GroupService {
 
         return groupMemberRepository.findByShoppingGroup_IdAndStatus(groupId, STATUS_ACCEPTED)
             .stream()
+            .sorted(Comparator.comparing(GroupMember::getId))
             .map(this::toMemberDTO)
             .collect(Collectors.toList());
     }

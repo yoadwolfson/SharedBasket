@@ -9,7 +9,7 @@ Developer A works as a full-stack contributor across the entire Shared Basket pr
 - Feature ownership is exclusive so the team works like a startup with clear responsibility boundaries.
 - Developer B owns group management, recommendations, the JSF shell, and real-time collaboration.
 
-## Phase 1 - Core Platform Foundation
+## Phase 1 - Core Platform Foundation V
 - Create the Spring Boot project structure, package layout, and PostgreSQL configuration.
 - Implement the domain entities, repositories, DTOs, mapper interfaces, validation rules, and shared exception handling.
 - Define the REST contract shape and the backend conventions the JSF layer will consume.
@@ -18,7 +18,7 @@ Developer A works as a full-stack contributor across the entire Shared Basket pr
 
 Control Point: the application starts cleanly, PostgreSQL connects, and the base model and API contract are stable.
 
-## Phase 2 - Authentication and Profile Management
+## Phase 2 - Authentication and Profile Management V
 - Build the registration feature end to end with the REST API, service logic, persistence rules, and the JSF registration screen.
 - Build the login feature end to end with authentication rules, password hashing, REST endpoints, and the JSF login screen.
 - Build the profile-management feature end to end with the REST API, service logic, persistence rules, and the JSF profile screen.
