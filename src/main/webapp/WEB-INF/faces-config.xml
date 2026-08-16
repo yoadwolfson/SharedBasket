@@ -35,6 +35,18 @@
     </managed-bean>
 
     <managed-bean>
+        <managed-bean-name>reportsController</managed-bean-name>
+        <managed-bean-class>com.sharedbasket.controller.jsf.ReportsController</managed-bean-class>
+        <managed-bean-scope>view</managed-bean-scope>
+    </managed-bean>
+
+    <managed-bean>
+        <managed-bean-name>recommendationsController</managed-bean-name>
+        <managed-bean-class>com.sharedbasket.controller.jsf.RecommendationsController</managed-bean-class>
+        <managed-bean-scope>view</managed-bean-scope>
+    </managed-bean>
+
+    <managed-bean>
         <managed-bean-name>profileBean</managed-bean-name>
         <managed-bean-class>com.sharedbasket.controller.jsf.ProfileBean</managed-bean-class>
         <managed-bean-scope>view</managed-bean-scope>

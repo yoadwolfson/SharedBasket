@@ -12,10 +12,106 @@
     <ui:define name="content">
         <div class="sb-reports-container">
             <h2 class="sb-page-title">Reports &amp; Statistics</h2>
+            <p class="sb-groups-intro">Spending totals, category and product breakdowns, and purchase history for the last 30 days.</p>
 
-            <div class="sb-reports-content">
-                <p class="sb-placeholder-text">Reports and statistics feature - Phase 2 implementation</p>
-            </div>
+            <h:panelGroup id="reportsAlertsPanel" layout="block">
+                <ui:repeat value="#{reportsController.alerts}" var="alert">
+                    <div class="sb-alert sb-alert-#{alert.type}">
+                        <h:outputText value="#{alert.message}" />
+                    </div>
+                </ui:repeat>
+            </h:panelGroup>
+
+            <h:form id="reportsForm">
+                <h:commandButton value="Refresh" action="#{reportsController.reloadReports}" styleClass="sb-btn sb-btn-primary">
+                    <f:ajax execute="@form" render=":reportsAlertsPanel :reportsContentPanel" />
+                </h:commandButton>
+            </h:form>
+
+            <h:panelGroup id="reportsContentPanel" layout="block">
+                <h:panelGroup layout="block" rendered="#{empty reportsController.statistics and empty reportsController.alerts}">
+                    <p class="sb-placeholder-text">Loading statistics...</p>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" rendered="#{not empty reportsController.statistics}" styleClass="sb-stats-grid">
+                    <div class="sb-stat-item">
+                        <span class="sb-stat-label">Total Cost</span>
+                        <span class="sb-stat-value">$#{reportsController.statistics.totalCost}</span>
+                    </div>
+                    <div class="sb-stat-item">
+                        <span class="sb-stat-label">Items Purchased</span>
+                        <span class="sb-stat-value">#{reportsController.statistics.itemsPurchased}</span>
+                    </div>
+                </h:panelGroup>
+
+                <h3 class="sb-widget-title">Spending by Category</h3>
+                <h:panelGroup layout="block" rendered="#{empty reportsController.spendingByCategory}">
+                    <p class="sb-placeholder-text">No category spending recorded in this period.</p>
+                </h:panelGroup>
+                <h:panelGroup layout="block" rendered="#{not empty reportsController.spendingByCategory}">
+                    <table class="sb-report-table">
+                        <thead>
+                            <tr><th>Category</th><th>Amount</th><th>Quantity</th><th>% of Total</th></tr>
+                        </thead>
+                        <tbody>
+                            <ui:repeat var="row" value="#{reportsController.spendingByCategory}">
+                                <tr>
+                                    <td>#{row.categoryName}</td>
+                                    <td>$#{row.amount}</td>
+                                    <td>#{row.quantity}</td>
+                                    <td>#{row.percentageOfTotal}%</td>
+                                </tr>
+                            </ui:repeat>
+                        </tbody>
+                    </table>
+                </h:panelGroup>
+
+                <h3 class="sb-widget-title">Spending by Product</h3>
+                <h:panelGroup layout="block" rendered="#{empty reportsController.spendingByProduct}">
+                    <p class="sb-placeholder-text">No product spending recorded in this period.</p>
+                </h:panelGroup>
+                <h:panelGroup layout="block" rendered="#{not empty reportsController.spendingByProduct}">
+                    <table class="sb-report-table">
+                        <thead>
+                            <tr><th>Product</th><th>Amount</th><th>Quantity</th><th>% of Total</th></tr>
+                        </thead>
+                        <tbody>
+                            <ui:repeat var="row" value="#{reportsController.spendingByProduct}">
+                                <tr>
+                                    <td>#{row.productName}</td>
+                                    <td>$#{row.amount}</td>
+                                    <td>#{row.quantity}</td>
+                                    <td>#{row.percentageOfTotal}%</td>
+                                </tr>
+                            </ui:repeat>
+                        </tbody>
+                    </table>
+                </h:panelGroup>
+
+                <h3 class="sb-widget-title">Purchase History</h3>
+                <h:panelGroup layout="block" rendered="#{empty reportsController.purchaseHistory}">
+                    <p class="sb-placeholder-text">No purchases recorded in this period.</p>
+                </h:panelGroup>
+                <h:panelGroup layout="block" rendered="#{not empty reportsController.purchaseHistory}">
+                    <table class="sb-report-table">
+                        <thead>
+                            <tr><th>Item</th><th>Category</th><th>Quantity</th><th>Price Paid</th><th>Purchased At</th><th>Purchased By</th></tr>
+                        </thead>
+                        <tbody>
+                            <ui:repeat var="entry" value="#{reportsController.purchaseHistory}">
+                                <tr>
+                                    <td>#{entry.itemName}</td>
+                                    <td>#{entry.categoryName}</td>
+                                    <td>#{entry.quantity} #{entry.unit}</td>
+                                    <td>$#{entry.pricePaid}</td>
+                                    <td><h:outputText value="#{entry.purchasedAt}" /></td>
+                                    <td>#{entry.purchasedByUserName}</td>
+                                </tr>
+                            </ui:repeat>
+                        </tbody>
+                    </table>
+                </h:panelGroup>
+            </h:panelGroup>
         </div>
     </ui:define>
 

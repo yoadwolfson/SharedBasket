@@ -26,7 +26,7 @@ Control Point: the frontend shell renders cleanly and matches the agreed applica
 
 Control Point: role restrictions are enforced in the backend and reflected correctly in the UI.
 
-## Phase 5 - Recommendations and Decision Support (Dashboard)
+## Phase 5 - Recommendations and Decision Support (Dashboard) V
 - Build the recommendation feature end to end with the REST API, service logic, persistence, and the JSF recommendation view.
 - Build the dashboard and decision-support screens for suggested items, quick basket rebuilds, and recommendation history.
 - Present recommendation results in a clear UI flow that helps users rebuild recurring shopping lists.
