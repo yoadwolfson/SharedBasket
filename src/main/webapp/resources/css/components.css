@@ -53,16 +53,23 @@
 
 /* Buttons */
 .sb-btn {
-    display: inline-block;
-    padding: 0.75rem 1.5rem;
-    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0.75rem 1.25rem;
+    border: 1px solid transparent;
     border-radius: var(--sb-border-radius);
     font-size: 1rem;
     font-weight: 600;
+    line-height: 1.2;
     cursor: pointer;
     transition: var(--sb-transition);
     text-decoration: none;
     text-align: center;
+    vertical-align: middle;
+    box-sizing: border-box;
+    font-family: inherit;
 }
 
 .sb-btn:disabled {
@@ -73,6 +80,7 @@
 .sb-btn-primary {
     background-color: var(--sb-secondary-color);
     color: white;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
 .sb-btn-primary:hover:not(:disabled) {
@@ -80,12 +88,15 @@
 }
 
 .sb-btn-secondary {
-    background-color: #95a5a6;
-    color: white;
+    background-color: #edf2f7;
+    color: var(--sb-primary-color);
+    border-color: #dfe7ef;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .sb-btn-secondary:hover:not(:disabled) {
-    background-color: #7f8c8d;
+    background-color: #e1e8f0;
+    color: var(--sb-primary-color);
 }
 
 .sb-btn-success {
