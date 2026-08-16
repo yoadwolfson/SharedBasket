@@ -9,7 +9,7 @@ Developer B works as a full-stack contributor across the entire Shared Basket pr
 - Feature ownership is exclusive so the team works like a startup with clear responsibility boundaries.
 - Developer A owns the core platform, authentication, categories and shopping items, and purchase reporting.
 
-## Phase 1 - JSF Application Shell
+## Phase 1 - JSF Application Shell V
 - Build the JSF shell, base layout, and reusable page templates.
 - Create the shared styling foundation, navigation structure, and standard UI components.
 - Align the frontend data structures with the agreed REST DTOs and validation responses.
@@ -18,7 +18,7 @@ Developer B works as a full-stack contributor across the entire Shared Basket pr
 
 Control Point: the frontend shell renders cleanly and matches the agreed application structure.
 
-## Phase 3 - Group Management
+## Phase 3 - Group Management V
 - Build the group-creation feature end to end, including the REST API, service logic, persistence, invitation codes, and the JSF group-creation screen.
 - Build the group-membership feature end to end, including join-request approval, rejection, removal, and leave-group flows.
 - Enforce admin and member permissions in the backend and mirror them in the matching JSF actions.
@@ -26,7 +26,7 @@ Control Point: the frontend shell renders cleanly and matches the agreed applica
 
 Control Point: role restrictions are enforced in the backend and reflected correctly in the UI.
 
-## Phase 5 - Recommendations and Decision Support
+## Phase 5 - Recommendations and Decision Support (Dashboard)
 - Build the recommendation feature end to end with the REST API, service logic, persistence, and the JSF recommendation view.
 - Build the dashboard and decision-support screens for suggested items, quick basket rebuilds, and recommendation history.
 - Present recommendation results in a clear UI flow that helps users rebuild recurring shopping lists.

@@ -15,7 +15,6 @@ import java.util.Collections;
 
 /**
  * Shared helpers for JSF beans that call this application's own REST endpoints over HTTP,
- * mirroring the pattern used by GroupsController.
  */
 public final class JsfRestClientSupport {
 
@@ -60,6 +59,15 @@ public final class JsfRestClientSupport {
     }
 
     public static String apiBaseUrl(String pathSuffix) {
+        String configuredBaseUrl = System.getProperty("sharedbasket.api-base-url");
+        if (configuredBaseUrl == null || configuredBaseUrl.trim().isEmpty()) {
+            configuredBaseUrl = System.getenv("SHAREDBASKET_API_BASE_URL");
+        }
+        if (configuredBaseUrl != null && !configuredBaseUrl.trim().isEmpty()) {
+            String baseUrl = configuredBaseUrl.trim();
+            return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) + pathSuffix : baseUrl + pathSuffix;
+        }
+
         HttpServletRequest request = getCurrentRequest();
         if (request == null) {
             throw new IllegalStateException("HttpServletRequest is not available");
