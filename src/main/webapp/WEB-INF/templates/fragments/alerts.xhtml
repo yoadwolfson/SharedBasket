@@ -14,27 +14,15 @@
     <div class="sb-alerts-container" id="sb-global-alerts">
         
         <!-- JSF Messages Display (Framework-level validation errors) -->
-        <h:messages id="globalMessages" 
-                    styleClass="sb-alert-messages"
-                    errorClass="sb-alert sb-alert-error"
-                    warnClass="sb-alert sb-alert-warning"
-                    infoClass="sb-alert sb-alert-info"
-                    layout="table"
-                    showSummary="true"
-                    showDetail="true" />
-        
-        <!-- Form Validation Errors by Field -->
-        <h:panelGroup layout="block" styleClass="sb-field-errors-container" rendered="#{not empty facesContext.messageList}">
-            <div class="sb-alert sb-alert-error">
-                <h4 class="sb-alert-title">Validation Errors</h4>
-                <ul class="sb-error-list">
-                    <ui:repeat var="msg" value="#{facesContext.messageList}">
-                        <li class="sb-error-item">
-                            <strong>#{msg.clientId}:</strong> #{msg.summary}
-                        </li>
-                    </ui:repeat>
-                </ul>
-            </div>
+        <h:panelGroup id="globalMessages" layout="block">
+            <h:messages id="globalMessagesContent"
+                        styleClass="sb-alert-messages"
+                        errorClass="sb-alert sb-alert-error"
+                        warnClass="sb-alert sb-alert-warning"
+                        infoClass="sb-alert sb-alert-info"
+                        layout="table"
+                        showSummary="true"
+                        showDetail="true" />
         </h:panelGroup>
         
         <!-- DEV-A Connection Point: Business Logic Errors -->

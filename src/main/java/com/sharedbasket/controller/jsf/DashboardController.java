@@ -54,15 +54,26 @@ public class DashboardController implements Serializable {
      * Loads the dashboard data including shopping items, statistics, and recommendations.
      */
     private void loadDashboardData() {
-        // Shopping items are still placeholder data until the shopping-item REST API exists.
-        shoppingItems = FrontendDtoAdapter.createPlaceholderShoppingItems();
-
         Long groupId = resolveGroupId();
         if (groupId == null) {
+            shoppingItems = Collections.emptyList();
             statistics = null;
             recommendations = Collections.emptyList();
             addErrorAlert("No group available for statistics and recommendations");
             return;
+        }
+
+        try {
+            ResponseEntity<List<ShoppingItemDTO>> response = restTemplate.exchange(
+                URI.create(JsfRestClientSupport.apiBaseUrl("/api/groups/" + groupId + "/items?purchased=false")),
+                HttpMethod.GET,
+                new HttpEntity<>(JsfRestClientSupport.buildJsonHeaders()),
+                new ParameterizedTypeReference<List<ShoppingItemDTO>>() {}
+            );
+            shoppingItems = response.getBody() == null ? Collections.emptyList() : response.getBody();
+        } catch (Exception ex) {
+            shoppingItems = Collections.emptyList();
+            addErrorAlert("Failed to load shopping items: " + ex.getMessage());
         }
 
         try {

@@ -9,18 +9,167 @@
 <ui:composition template="/WEB-INF/templates/layouts/base-layout.xhtml">
     <ui:param name="pageTitle" value="Shopping List - Shared Basket" />
 
+    <ui:define name="additionalStyles">
+        <h:outputStylesheet library="css" name="shopping-list.css" />
+    </ui:define>
+
     <ui:define name="content">
         <div class="sb-shopping-list-container">
             <h2 class="sb-page-title">Shopping List</h2>
+            <p class="sb-shopping-intro">Keep your shared basket current with clear categories, quantities, and purchase states.</p>
 
             <div class="sb-shopping-content">
+                <section class="sb-widget sb-shopping-group-selector">
+                    <div class="sb-shopping-section-header">
+                        <div>
+                            <h3 class="sb-widget-title">Choose a group</h3>
+                            <p class="sb-shopping-helper">Select the group whose shared shopping list you want to manage.</p>
+                        </div>
+                        <h:panelGroup rendered="#{shoppingListController.groupSelected}" styleClass="sb-selected-group-badge">
+                            <h:outputText value="#{shoppingListController.selectedGroupName}" />
+                            <span><h:outputText value="#{shoppingListController.selectedGroupRole}" /></span>
+                        </h:panelGroup>
+                    </div>
+                    <h:panelGroup rendered="#{empty shoppingListController.groups}">
+                        <p class="sb-placeholder-text">You are not an accepted member of any group.</p>
+                    </h:panelGroup>
+                    <div class="sb-group-choice-list">
+                        <ui:repeat value="#{shoppingListController.groups}" var="group">
+                            <h:form styleClass="sb-group-choice">
+                                <div>
+                                    <div class="sb-shopping-table-title"><h:outputText value="#{group.name}" /></div>
+                                    <div class="sb-shopping-table-meta">
+                                        <h:outputText value="#{group.myRole}" />
+                                        <h:outputText value=" | " />
+                                        <h:outputText value="#{group.myStatus}" />
+                                    </div>
+                                </div>
+                                <h:commandButton value="Select"
+                                                 action="#{shoppingListController.selectGroup(group.id)}"
+                                                 styleClass="sb-btn sb-btn-success">
+                                    <f:ajax execute="@this" render="@form :shoppingWorkflow :globalMessages" />
+                                </h:commandButton>
+                            </h:form>
+                        </ui:repeat>
+                    </div>
+                </section>
+
+                <h:panelGroup id="shoppingWorkflow" layout="block">
+                <h:panelGroup rendered="#{shoppingListController.groupSelected}" layout="block">
+                <h:form id="categoryForm" styleClass="sb-shopping-section" rendered="#{shoppingListController.selectedGroupAdmin}">
+                    <div class="sb-widget sb-shopping-section">
+                        <h3 class="sb-widget-title">#{shoppingListController.editingCategory ? 'Edit Category' : 'Categories'}</h3>
+                        <h:panelGroup rendered="#{empty shoppingListController.categories}">
+                            <p class="sb-placeholder-text">No active categories.</p>
+                        </h:panelGroup>
+                        <ui:repeat value="#{shoppingListController.categories}" var="category">
+                            <span class="sb-category-chip">
+                                <span class="sb-category-swatch"></span>
+                                <h:outputText value="#{category.name}" />
+                                <h:commandButton value="Edit"
+                                                 action="#{shoppingListController.editCategory(category)}"
+                                                 styleClass="sb-btn sb-btn-secondary" />
+                                <h:commandButton value="Archive"
+                                                 action="#{shoppingListController.archiveCategory(category)}"
+                                                 styleClass="sb-btn sb-btn-danger" />
+                            </span>
+                        </ui:repeat>
+                        <div class="sb-shopping-form">
+                            <div class="sb-form-group sb-form-group-wide">
+                            <h:outputLabel for="categoryName" styleClass="sb-form-label" value="Category name" />
+                            <h:inputText id="categoryName" value="#{shoppingListController.categoryName}" maxlength="100"
+                                         styleClass="sb-form-input" required="true" />
+                            <h:message for="categoryName" styleClass="sb-field-error" />
+                            </div>
+                            <div class="sb-form-group">
+                            <h:outputLabel for="categoryColor" styleClass="sb-form-label" value="Color" />
+                            <h:selectOneMenu id="categoryColor" value="#{shoppingListController.categoryColor}"
+                                             styleClass="sb-form-select sb-color-select sb-color-#{shoppingListController.categoryColorKey}"
+                                           onchange="this.style.backgroundColor=this.value;">
+                                <f:selectItems value="#{shoppingListController.categoryColorOptions}"
+                                               var="colorOption"
+                                               itemValue="#{colorOption.value}"
+                                               itemLabel="#{colorOption.label}" />
+                            </h:selectOneMenu>
+                            </div>
+                            <div class="sb-form-group">
+                            <h:outputLabel for="categorySortOrder" styleClass="sb-form-label" value="Display order" />
+                            <h:inputText id="categorySortOrder" value="#{shoppingListController.categorySortOrder}"
+                                         styleClass="sb-form-input" />
+                            </div>
+                            <div class="sb-shopping-form-actions">
+                            <h:commandButton value="#{shoppingListController.editingCategory ? 'Save Changes' : 'Create Category'}"
+                                             action="#{shoppingListController.saveCategory}"
+                                             styleClass="sb-btn sb-btn-primary" />
+                            <h:commandButton value="Clear"
+                                             action="#{shoppingListController.clearCategoryForm}"
+                                             immediate="true"
+                                             styleClass="sb-btn sb-btn-secondary">
+                                <f:ajax execute="@this" render="categoryForm" />
+                            </h:commandButton>
+                            </div>
+                        </div>
+                    </div>
+                </h:form>
+
+                <h:form id="itemForm" styleClass="sb-shopping-section">
+                    <div class="sb-widget sb-shopping-section">
+                        <h3 class="sb-widget-title">#{shoppingListController.editing ? 'Edit Item' : 'Add Item'}</h3>
+                        <div class="sb-shopping-form">
+                            <div class="sb-form-group sb-form-group-wide">
+                            <h:outputLabel for="itemName" styleClass="sb-form-label" value="Item name" />
+                            <h:inputText id="itemName" value="#{shoppingListController.itemName}" required="true" maxlength="200"
+                                         styleClass="sb-form-input" />
+                            <h:message for="itemName" styleClass="sb-field-error" />
+                            </div>
+                            <div class="sb-form-group">
+                            <h:outputLabel for="itemQuantity" styleClass="sb-form-label" value="Quantity" />
+                            <h:inputText id="itemQuantity" value="#{shoppingListController.itemQuantity}" styleClass="sb-form-input" />
+                            </div>
+                            <div class="sb-form-group">
+                            <h:outputLabel for="itemUnit" styleClass="sb-form-label" value="Unit" />
+                            <h:inputText id="itemUnit" value="#{shoppingListController.itemUnit}" maxlength="20"
+                                         styleClass="sb-form-input" />
+                            </div>
+                            <div class="sb-form-group">
+                            <h:outputLabel for="itemPrice" styleClass="sb-form-label" value="Estimated price" />
+                            <h:inputText id="itemPrice" value="#{shoppingListController.itemEstimatedPrice}" styleClass="sb-form-input" />
+                            </div>
+                            <div class="sb-form-group sb-form-group-wide">
+                            <h:outputLabel for="itemCategory" styleClass="sb-form-label" value="Category" />
+                            <h:selectOneMenu id="itemCategory" value="#{shoppingListController.itemCategoryId}" styleClass="sb-form-select">
+                                <f:selectItem itemLabel="No category" itemValue="" />
+                                <f:selectItems value="#{shoppingListController.categories}" var="category"
+                                               itemValue="#{category.id}" itemLabel="#{category.name}" />
+                            </h:selectOneMenu>
+                            </div>
+                            <div class="sb-form-group sb-form-group-full">
+                            <h:outputLabel for="itemNotes" styleClass="sb-form-label" value="Notes" />
+                            <h:inputTextarea id="itemNotes" value="#{shoppingListController.itemNotes}" rows="3"
+                                             styleClass="sb-form-textarea" />
+                            </div>
+                            <div class="sb-shopping-form-actions">
+                            <h:commandButton value="#{shoppingListController.editing ? (shoppingListController.selectedGroupAdmin ? 'Save Changes' : 'Request Edit') : (shoppingListController.selectedGroupAdmin ? 'Add Item' : 'Request Add Item')}"
+                                             action="#{shoppingListController.saveItem}"
+                                             styleClass="sb-btn sb-btn-primary" />
+                            <h:commandButton value="Clear"
+                                             action="#{shoppingListController.startNewItem}"
+                                             immediate="true"
+                                             styleClass="sb-btn sb-btn-secondary">
+                                <f:ajax execute="@this" render="itemForm" />
+                            </h:commandButton>
+                            </div>
+                        </div>
+                    </div>
+                </h:form>
+
                 <ui:repeat value="#{shoppingListController.alerts}" var="alert">
                     <div class="sb-alert sb-alert-#{alert.type}">
                         <h:outputText value="#{alert.message}" />
                     </div>
                 </ui:repeat>
 
-                <div class="sb-widget" style="margin-bottom:1rem;">
+                <div class="sb-widget sb-shopping-section sb-realtime-diagnostics">
                     <h3 class="sb-widget-title">Realtime Session</h3>
                     <p class="sb-placeholder-text">State: #{shoppingListController.realtimeState}</p>
                     <p class="sb-placeholder-text">Last event: #{shoppingListController.lastEventMessage}</p>
@@ -56,33 +205,67 @@
                     </h:form>
                 </div>
 
-                <div class="sb-widget">
+                <div class="sb-widget sb-shopping-section">
                     <h3 class="sb-widget-title">Current Items</h3>
                     <h:panelGroup rendered="#{empty shoppingListController.shoppingItems}">
                         <p class="sb-placeholder-text">No items available.</p>
                     </h:panelGroup>
 
                     <h:panelGroup rendered="#{not empty shoppingListController.shoppingItems}">
-                        <table class="sb-table" style="width:100%;">
+                        <div class="sb-shopping-table-wrap">
+                        <table class="sb-table sb-shopping-table">
                             <thead>
                                 <tr>
                                     <th>Item</th>
                                     <th>Quantity</th>
+                                    <th>Category</th>
                                     <th>Estimated Price</th>
+                                    <th>State</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <ui:repeat value="#{shoppingListController.shoppingItems}" var="item">
                                     <tr>
-                                        <td><h:outputText value="#{item.name}" /></td>
-                                        <td><h:outputText value="#{item.quantity}" /></td>
+                                        <td>
+                                            <div class="sb-shopping-table-title"><h:outputText value="#{item.name}" /></div>
+                                            <div class="sb-shopping-table-meta"><h:outputText value="#{item.notes}" /></div>
+                                        </td>
+                                        <td><h:outputText value="#{item.quantity} #{item.unit}" /></td>
+                                        <td>
+                                            <span class="sb-shopping-category">
+                                                <span class="sb-category-swatch"></span>
+                                                <h:outputText value="#{empty item.categoryName ? 'Uncategorized' : item.categoryName}" />
+                                            </span>
+                                        </td>
                                         <td><h:outputText value="#{item.estimatedPrice}" /></td>
+                                        <td>
+                                            <span class="sb-shopping-status #{item.purchased ? 'sb-shopping-status-purchased' : 'sb-shopping-status-pending'}">
+                                                <h:outputText value="#{item.purchased ? 'Purchased' : 'Pending'}" />
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <h:form>
+                                                <h:commandButton value="#{item.purchased ? 'Unpurchase' : 'Purchase'}"
+                                                                 action="#{shoppingListController.togglePurchased(item)}"
+                                                                 styleClass="sb-btn sb-btn-success" />
+                                                <h:commandButton value="Edit"
+                                                                 action="#{shoppingListController.editItem(item)}"
+                                                                 styleClass="sb-btn sb-btn-danger" />
+                                                <h:commandButton value="Delete"
+                                                                 action="#{shoppingListController.deleteItem(item)}"
+                                                                 styleClass="sb-btn sb-btn-secondary" />
+                                            </h:form>
+                                        </td>
                                     </tr>
                                 </ui:repeat>
                             </tbody>
                         </table>
+                        </div>
                     </h:panelGroup>
                 </div>
+                </h:panelGroup>
+                </h:panelGroup>
             </div>
         </div>
     </ui:define>

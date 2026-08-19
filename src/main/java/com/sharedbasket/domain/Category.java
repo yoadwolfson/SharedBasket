@@ -26,6 +26,10 @@ public class Category {
 	@Column(nullable = false)
 	private Boolean archived = Boolean.FALSE;
 
+	@Version
+	@Column(nullable = false)
+	private Long version = 0L;
+
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt = Instant.now();
 
@@ -78,6 +82,14 @@ public class Category {
 
 	public void setArchived(Boolean archived) {
 		this.archived = archived;
+	}
+
+	public Long getVersion() {
+		return version;
+	}
+
+	public void setVersion(Long version) {
+		this.version = version;
 	}
 
 	public Instant getCreatedAt() {
