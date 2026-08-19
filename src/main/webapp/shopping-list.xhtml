@@ -68,10 +68,14 @@
                                 <h:outputText value="#{category.name}" />
                                 <h:commandButton value="Edit"
                                                  action="#{shoppingListController.editCategory(category)}"
-                                                 styleClass="sb-btn sb-btn-secondary" />
+                                                 styleClass="sb-btn sb-btn-secondary">
+                                    <f:ajax execute="@this" render=":shoppingWorkflow :globalMessages" />
+                                </h:commandButton>
                                 <h:commandButton value="Archive"
                                                  action="#{shoppingListController.archiveCategory(category)}"
-                                                 styleClass="sb-btn sb-btn-danger" />
+                                                 styleClass="sb-btn sb-btn-danger">
+                                    <f:ajax execute="@this" render=":shoppingWorkflow :globalMessages" />
+                                </h:commandButton>
                             </span>
                         </ui:repeat>
                         <div class="sb-shopping-form">
@@ -100,7 +104,9 @@
                             <div class="sb-shopping-form-actions">
                             <h:commandButton value="#{shoppingListController.editingCategory ? 'Save Changes' : 'Create Category'}"
                                              action="#{shoppingListController.saveCategory}"
-                                             styleClass="sb-btn sb-btn-primary" />
+                                             styleClass="sb-btn sb-btn-primary">
+                                <f:ajax execute="@form" render=":shoppingWorkflow :globalMessages" />
+                            </h:commandButton>
                             <h:commandButton value="Clear"
                                              action="#{shoppingListController.clearCategoryForm}"
                                              immediate="true"
@@ -151,7 +157,9 @@
                             <div class="sb-shopping-form-actions">
                             <h:commandButton value="#{shoppingListController.editing ? (shoppingListController.selectedGroupAdmin ? 'Save Changes' : 'Request Edit') : (shoppingListController.selectedGroupAdmin ? 'Add Item' : 'Request Add Item')}"
                                              action="#{shoppingListController.saveItem}"
-                                             styleClass="sb-btn sb-btn-primary" />
+                                             styleClass="sb-btn sb-btn-primary">
+                                <f:ajax execute="@form" render=":shoppingWorkflow :globalMessages" />
+                            </h:commandButton>
                             <h:commandButton value="Clear"
                                              action="#{shoppingListController.startNewItem}"
                                              immediate="true"
@@ -169,44 +177,15 @@
                     </div>
                 </ui:repeat>
 
-                <div class="sb-widget sb-shopping-section sb-realtime-diagnostics">
-                    <h3 class="sb-widget-title">Realtime Session</h3>
-                    <p class="sb-placeholder-text">State: #{shoppingListController.realtimeState}</p>
-                    <p class="sb-placeholder-text">Last event: #{shoppingListController.lastEventMessage}</p>
-                    <p class="sb-placeholder-text">Last version: #{shoppingListController.lastAppliedVersion}</p>
-
-                    <h:form>
-                        <h:outputLabel for="scenario" value="Scenario" />
-                        <h:selectOneMenu id="scenario" value="#{shoppingListController.selectedScenario}">
-                            <f:selectItem itemValue="ORDERING_EDGE_CASE" itemLabel="Ordering Edge Case" />
-                            <f:selectItem itemValue="NORMAL" itemLabel="Normal" />
-                        </h:selectOneMenu>
-                        <h:outputText value="&#160;" />
-                        <h:commandButton value="Connect (Mock)"
-                                         action="#{shoppingListController.connectRealtime}"
-                                         styleClass="sb-btn sb-btn-primary" />
-                        <h:outputText value="&#160;" />
-                        <h:commandButton value="Process Next Event"
-                                         action="#{shoppingListController.processNextMockEvent}"
-                                         styleClass="sb-btn sb-btn-secondary"
-                                         disabled="#{not shoppingListController.connected}" />
-                        <h:outputText value="&#160;" />
-                        <h:commandButton value="Refresh Snapshot"
-                                         action="#{shoppingListController.refreshSnapshot}"
-                                         styleClass="sb-btn sb-btn-secondary" />
-                        <h:outputText value="&#160;" />
-                        <h:commandButton value="Reconnect"
-                                         action="#{shoppingListController.reconnectRealtime}"
-                                         styleClass="sb-btn sb-btn-secondary" />
-                        <h:outputText value="&#160;" />
-                        <h:commandButton value="Disconnect"
-                                         action="#{shoppingListController.disconnectRealtime}"
-                                         styleClass="sb-btn sb-btn-secondary" />
-                    </h:form>
-                </div>
-
                 <div class="sb-widget sb-shopping-section">
                     <h3 class="sb-widget-title">Current Items</h3>
+                    <h:form id="refreshForm">
+                        <h:commandButton value="Refresh List"
+                                         action="#{shoppingListController.refreshSnapshot}"
+                                         styleClass="sb-btn sb-btn-secondary">
+                            <f:ajax execute="@this" render=":shoppingWorkflow :globalMessages" />
+                        </h:commandButton>
+                    </h:form>
                     <h:panelGroup rendered="#{empty shoppingListController.shoppingItems}">
                         <p class="sb-placeholder-text">No items available.</p>
                     </h:panelGroup>
@@ -248,13 +227,19 @@
                                             <h:form>
                                                 <h:commandButton value="#{item.purchased ? 'Unpurchase' : 'Purchase'}"
                                                                  action="#{shoppingListController.togglePurchased(item)}"
-                                                                 styleClass="sb-btn sb-btn-success" />
+                                                                 styleClass="sb-btn sb-btn-success">
+                                                    <f:ajax execute="@this" render=":shoppingWorkflow :globalMessages" />
+                                                </h:commandButton>
                                                 <h:commandButton value="Edit"
                                                                  action="#{shoppingListController.editItem(item)}"
-                                                                 styleClass="sb-btn sb-btn-danger" />
+                                                                 styleClass="sb-btn sb-btn-danger">
+                                                    <f:ajax execute="@this" render=":shoppingWorkflow :globalMessages" />
+                                                </h:commandButton>
                                                 <h:commandButton value="Delete"
                                                                  action="#{shoppingListController.deleteItem(item)}"
-                                                                 styleClass="sb-btn sb-btn-secondary" />
+                                                                 styleClass="sb-btn sb-btn-secondary">
+                                                    <f:ajax execute="@this" render=":shoppingWorkflow :globalMessages" />
+                                                </h:commandButton>
                                             </h:form>
                                         </td>
                                     </tr>
