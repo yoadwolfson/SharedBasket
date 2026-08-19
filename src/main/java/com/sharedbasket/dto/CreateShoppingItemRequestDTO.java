@@ -1,0 +1,32 @@
+package com.sharedbasket.dto;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+
+public class CreateShoppingItemRequestDTO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private String name;
+    private BigDecimal quantity;
+    private String unit;
+    private BigDecimal estimatedPrice;
+    private Long categoryId;
+    private String notes;
+
+    public CreateShoppingItemRequestDTO() {
+    }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public BigDecimal getQuantity() { return quantity; }
+    public void setQuantity(BigDecimal quantity) { this.quantity = quantity; }
+    public String getUnit() { return unit; }
+    public void setUnit(String unit) { this.unit = unit; }
+    public BigDecimal getEstimatedPrice() { return estimatedPrice; }
+    public void setEstimatedPrice(BigDecimal estimatedPrice) { this.estimatedPrice = estimatedPrice; }
+    public Long getCategoryId() { return categoryId; }
+    public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+}

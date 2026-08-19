@@ -34,6 +34,10 @@ public class ShoppingItem {
 	@Column(nullable = false)
 	private Boolean purchased = Boolean.FALSE;
 
+	@Version
+	@Column(nullable = false)
+	private Long version = 0L;
+
 	@Column(name = "purchased_at")
 	private Instant purchasedAt;
 
@@ -116,6 +120,14 @@ public class ShoppingItem {
 
 	public void setPurchased(Boolean purchased) {
 		this.purchased = purchased;
+	}
+
+	public Long getVersion() {
+		return version;
+	}
+
+	public void setVersion(Long version) {
+		this.version = version;
 	}
 
 	public Instant getPurchasedAt() {
