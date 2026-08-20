@@ -11,7 +11,7 @@ public class CategoryDTO implements Serializable {
     private Long groupId;
     private String name;
     private String color;
-    private Integer sortOrder;
+    private String emoji;
     private Boolean archived;
     private Instant createdAt;
     private Instant updatedAt;
@@ -28,8 +28,8 @@ public class CategoryDTO implements Serializable {
     public void setName(String name) { this.name = name; }
     public String getColor() { return color; }
     public void setColor(String color) { this.color = color; }
-    public Integer getSortOrder() { return sortOrder; }
-    public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
+    public String getEmoji() { return emoji; }
+    public void setEmoji(String emoji) { this.emoji = emoji; }
     public Boolean getArchived() { return archived; }
     public void setArchived(Boolean archived) { this.archived = archived; }
     public Instant getCreatedAt() { return createdAt; }

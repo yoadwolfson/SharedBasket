@@ -210,6 +210,11 @@ public class ShellController implements Serializable {
         return currentGroupName;
     }
 
+    public void setCurrentGroup(Long groupId, String groupName) {
+        this.currentGroupId = groupId;
+        this.currentGroupName = groupName;
+    }
+
     private void resolveCurrentGroup() {
         if (restTemplate == null) {
             restTemplate = JsfRestClientSupport.resolveBean(RestTemplate.class);

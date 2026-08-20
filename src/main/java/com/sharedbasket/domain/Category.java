@@ -20,8 +20,8 @@ public class Category {
 	@Column
 	private String color;
 
-	@Column(name = "sort_order", nullable = false)
-	private Integer sortOrder = 0;
+	@Column(name = "emoji", length = 8)
+	private String emoji;
 
 	@Column(nullable = false)
 	private Boolean archived = Boolean.FALSE;
@@ -68,12 +68,12 @@ public class Category {
 		this.color = color;
 	}
 
-	public Integer getSortOrder() {
-		return sortOrder;
+	public String getEmoji() {
+		return emoji;
 	}
 
-	public void setSortOrder(Integer sortOrder) {
-		this.sortOrder = sortOrder;
+	public void setEmoji(String emoji) {
+		this.emoji = emoji;
 	}
 
 	public Boolean getArchived() {

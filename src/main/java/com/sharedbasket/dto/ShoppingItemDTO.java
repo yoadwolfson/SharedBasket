@@ -1,5 +1,8 @@
 package com.sharedbasket.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sharedbasket.domain.ItemUnit;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -12,7 +15,7 @@ public class ShoppingItemDTO implements Serializable {
     private Long groupId;
     private String name;
     private BigDecimal quantity;
-    private String unit;
+    private ItemUnit unit;
     private BigDecimal estimatedPrice;
     private Boolean purchased;
     private Instant purchasedAt;
@@ -20,6 +23,8 @@ public class ShoppingItemDTO implements Serializable {
     private String purchasedByUserName;
     private Long categoryId;
     private String categoryName;
+    private String categoryEmoji;
+    private String categoryColor;
     private String notes;
     private Long createdByUserId;
     private String createdByUserName;
@@ -43,12 +48,16 @@ public class ShoppingItemDTO implements Serializable {
     public void setName(String name) { this.name = name; }
     public BigDecimal getQuantity() { return quantity; }
     public void setQuantity(BigDecimal quantity) { this.quantity = quantity; }
-    public void setQuantity(int quantity) { this.quantity = BigDecimal.valueOf(quantity); }
-    public String getUnit() { return unit; }
-    public void setUnit(String unit) { this.unit = unit; }
+    public ItemUnit getUnit() { return unit; }
+    public void setUnit(ItemUnit unit) { this.unit = unit; }
+    @JsonIgnore
+    public String getUnitLabel() { return unit == null ? "" : unit.getShortLabel(); }
+    public String getCategoryEmoji() { return categoryEmoji; }
+    public void setCategoryEmoji(String categoryEmoji) { this.categoryEmoji = categoryEmoji; }
+    public String getCategoryColor() { return categoryColor; }
+    public void setCategoryColor(String categoryColor) { this.categoryColor = categoryColor; }
     public BigDecimal getEstimatedPrice() { return estimatedPrice; }
     public void setEstimatedPrice(BigDecimal estimatedPrice) { this.estimatedPrice = estimatedPrice; }
-    public void setEstimatedPrice(double estimatedPrice) { this.estimatedPrice = BigDecimal.valueOf(estimatedPrice); }
     public Boolean getPurchased() { return purchased; }
     public void setPurchased(Boolean purchased) { this.purchased = purchased; }
     public Instant getPurchasedAt() { return purchasedAt; }
