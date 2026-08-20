@@ -241,6 +241,10 @@
     font-weight: 600;
 }
 
+.sb-add-trigger-hidden {
+    display: none;
+}
+
 .sb-item-form-wrapper {
     overflow: hidden;
     transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease;

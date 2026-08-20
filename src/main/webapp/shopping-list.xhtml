@@ -59,12 +59,11 @@
                         </div>
                     </ui:repeat>
                 </h:panelGroup>
-                <h:form id="addTriggerForm">
-                    <h:commandButton value="+ Add Item" action="#{shoppingListController.openAddForm}"
+                <h:form id="addTriggerForm"
+                    styleClass="#{shoppingListController.addFormVisible ? 'sb-add-trigger-hidden' : ''}">
+                    <h:commandButton value="+ New Item" action="#{shoppingListController.openAddForm}"
                                      rendered="#{not shoppingListController.addFormVisible}"
-                                     styleClass="sb-btn sb-btn-primary sb-add-item-trigger">
-                        <f:ajax execute="@this" render=":shoppingAlerts :itemFormWrapper :addTriggerForm" onevent="sbFocusItemName" />
-                    </h:commandButton>
+                                     styleClass="sb-btn sb-btn-primary sb-add-item-trigger" />
                 </h:form>
                 <h:panelGroup id="itemFormWrapper" layout="block"
                               styleClass="sb-item-form-wrapper #{shoppingListController.addFormVisible ? 'sb-item-form-open' : 'sb-item-form-closed'} #{facesContext.validationFailed ? 'sb-item-form-invalid' : ''}">
@@ -142,11 +141,9 @@
                             <h:message for="itemNotes" styleClass="sb-field-error" />
                             </div>
                             <div class="sb-shopping-form-actions">
-                            <h:commandButton value="#{shoppingListController.editing ? (shoppingListController.selectedGroupAdmin ? 'Save Changes' : 'Request Edit') : (shoppingListController.selectedGroupAdmin ? 'Add Item' : 'Request Add Item')}"
+                            <h:commandButton value="#{shoppingListController.editing ? (shoppingListController.selectedGroupAdmin ? 'Save Changes' : 'Request Edit') : (shoppingListController.selectedGroupAdmin ? 'Save Item' : 'Request Add Item')}"
                                              action="#{shoppingListController.saveItem}"
-                                             styleClass="sb-btn sb-btn-primary">
-                                <f:ajax execute="@form" render=":shoppingAlerts :itemFormWrapper :addTriggerForm :shoppingItemsTable :globalMessages" onevent="sbScrollToFeedback" />
-                            </h:commandButton>
+                                             styleClass="sb-btn sb-btn-primary" />
                             <h:commandButton value="Cancel"
                                              action="#{shoppingListController.closeAddForm}"
                                              immediate="true"
@@ -226,13 +223,13 @@
                             <f:ajax execute="@this" render=":shoppingAlerts shoppingItemsTable :globalMessages" />
                         </h:commandButton>
                     </h:form>
+                    <h:panelGroup id="shoppingItemsTable" layout="block">
                     <h:panelGroup rendered="#{empty shoppingListController.shoppingItems}">
                         <p class="sb-placeholder-text">No items available.</p>
                     </h:panelGroup>
 
                     <h:panelGroup rendered="#{not empty shoppingListController.shoppingItems}">
                         <div class="sb-shopping-table-wrap">
-                        <h:panelGroup id="shoppingItemsTable" layout="block">
                         <table class="sb-table sb-shopping-table">
                             <thead>
                                 <tr>
@@ -269,27 +266,21 @@
                                             <h:form>
                                                 <h:commandButton value="#{item.purchased ? 'Unpurchase' : 'Purchase'}"
                                                                  action="#{shoppingListController.togglePurchased(item)}"
-                                                                 styleClass="sb-btn sb-btn-success">
-                                                    <f:ajax execute="@this" render=":shoppingAlerts shoppingItemsTable :globalMessages" />
-                                                </h:commandButton>
+                                                                 styleClass="sb-btn sb-btn-success" />
                                                 <h:commandButton value="Edit"
                                                                  action="#{shoppingListController.editItem(item)}"
-                                                                 styleClass="sb-btn sb-btn-danger">
-                                                    <f:ajax execute="@this" render=":shoppingAlerts :itemFormWrapper :addTriggerForm :globalMessages" onevent="sbFocusItemName" />
-                                                </h:commandButton>
+                                                                 styleClass="sb-btn sb-btn-danger" />
                                                 <h:commandButton value="Delete"
                                                                  action="#{shoppingListController.deleteItem(item)}"
-                                                                 styleClass="sb-btn sb-btn-secondary">
-                                                    <f:ajax execute="@this" render=":shoppingAlerts shoppingItemsTable :globalMessages" />
-                                                </h:commandButton>
+                                                                 styleClass="sb-btn sb-btn-secondary" />
                                             </h:form>
                                         </td>
                                     </tr>
                                 </ui:repeat>
                             </tbody>
                         </table>
-                        </h:panelGroup>
                         </div>
+                    </h:panelGroup>
                     </h:panelGroup>
                 </div>
                 </h:panelGroup>
