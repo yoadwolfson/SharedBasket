@@ -318,6 +318,9 @@ public class ShoppingListController implements Serializable {
 
     /** Re-normalizes the entered quantity whenever the unit dropdown changes. */
     public void onUnitChanged() {
+        if (itemUnit == null) {
+            itemUnit = ItemUnit.PIECE;
+        }
         itemQuantity = QuantityNormalizer.normalize(itemQuantity, itemUnit);
     }
 
@@ -336,6 +339,9 @@ public class ShoppingListController implements Serializable {
 
     public void saveItem() {
         clearAlerts();
+        if (itemUnit == null) {
+            itemUnit = ItemUnit.PIECE;
+        }
         Long groupId = getCurrentGroupId();
         if (groupId == null) {
             addError("Select a group before adding an item");
@@ -669,7 +675,7 @@ public class ShoppingListController implements Serializable {
     public BigDecimal getItemQuantity() { return itemQuantity; }
     public void setItemQuantity(BigDecimal itemQuantity) { this.itemQuantity = itemQuantity; }
     public ItemUnit getItemUnit() { return itemUnit; }
-    public void setItemUnit(ItemUnit itemUnit) { this.itemUnit = itemUnit; }
+    public void setItemUnit(ItemUnit itemUnit) { this.itemUnit = itemUnit == null ? ItemUnit.PIECE : itemUnit; }
     public List<ItemUnit> getItemUnitOptions() { return ItemUnit.options(); }
     public String getQuantityStep() { return itemUnit == ItemUnit.KILOGRAM ? "any" : "1"; }
     public String getQuantityMin() { return itemUnit == ItemUnit.KILOGRAM ? "0.001" : "1"; }
