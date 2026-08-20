@@ -21,4 +21,8 @@ public interface ShoppingItemRequestRepository extends JpaRepository<ShoppingIte
     boolean existsByShoppingGroup_IdAndRequestedByUser_IdAndShoppingItem_IdAndTypeAndStatus(
         Long groupId, Long userId, Long itemId, com.sharedbasket.domain.ShoppingItemRequestType type,
         ShoppingItemRequestStatus status);
+
+    List<ShoppingItemRequest> findByShoppingGroup_IdAndRequestedByUser_IdAndTypeAndStatus(
+        Long groupId, Long userId, com.sharedbasket.domain.ShoppingItemRequestType type,
+        ShoppingItemRequestStatus status);
 }

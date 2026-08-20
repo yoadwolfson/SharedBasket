@@ -1,7 +1,9 @@
 package com.sharedbasket.service.impl;
 
 import com.sharedbasket.domain.Category;
+import com.sharedbasket.domain.DefaultCategory;
 import com.sharedbasket.domain.GroupMember;
+import com.sharedbasket.domain.ItemUnit;
 import com.sharedbasket.domain.SbGroup;
 import com.sharedbasket.domain.ShoppingItem;
 import com.sharedbasket.domain.User;
@@ -18,6 +20,7 @@ import com.sharedbasket.repo.SbGroupRepository;
 import com.sharedbasket.repo.ShoppingItemRepository;
 import com.sharedbasket.repo.UserRepository;
 import com.sharedbasket.service.ShoppingItemService;
+import com.sharedbasket.util.QuantityNormalizer;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +38,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
 
     private static final String ACCEPTED = "ACCEPTED";
     private static final String ADMIN = "ADMIN";
+    private static final BigDecimal MAX_PRICE = new BigDecimal("999999");
 
     private final ShoppingItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
@@ -61,14 +65,16 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
             throw new BadRequestException("Request body is required");
         }
         String name = validateName(request.getName());
-        BigDecimal quantity = request.getQuantity() == null ? BigDecimal.ONE : request.getQuantity();
-        validateNumbers(quantity, request.getEstimatedPrice());
+        ItemUnit unit = request.getUnit() == null ? ItemUnit.PIECE : request.getUnit();
+        BigDecimal quantity = QuantityNormalizer.normalize(request.getQuantity(), unit);
+        QuantityNormalizer.validate(quantity, unit);
+        validatePrice(request.getEstimatedPrice());
         ShoppingItem item = new ShoppingItem();
         item.setShoppingGroup(getGroup(groupId));
         item.setCreatedByUser(getUser(currentUserId));
         item.setName(name);
         item.setQuantity(quantity);
-        item.setUnit(normalize(request.getUnit()));
+        item.setUnit(unit);
         item.setEstimatedPrice(request.getEstimatedPrice());
         item.setCategory(resolveCategory(groupId, request.getCategoryId()));
         item.setNotes(normalize(request.getNotes()));
@@ -102,15 +108,17 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
         ShoppingItem item = getItem(groupId, itemId);
         requireVersion(item.getVersion(), request.getVersion());
         if (request.getName() != null) item.setName(validateName(request.getName()));
-        if (request.getQuantity() != null) {
-            validateNumbers(request.getQuantity(), request.getEstimatedPrice());
-            item.setQuantity(request.getQuantity());
+        if (request.getUnit() != null) item.setUnit(request.getUnit());
+        if (request.getQuantity() != null || request.getUnit() != null) {
+            BigDecimal source = request.getQuantity() == null ? item.getQuantity() : request.getQuantity();
+            BigDecimal quantity = QuantityNormalizer.normalize(source, item.getUnit());
+            QuantityNormalizer.validate(quantity, item.getUnit());
+            item.setQuantity(quantity);
         }
         if (request.getEstimatedPrice() != null) {
-            validateNumbers(item.getQuantity(), request.getEstimatedPrice());
+            validatePrice(request.getEstimatedPrice());
             item.setEstimatedPrice(request.getEstimatedPrice());
         }
-        if (request.getUnit() != null) item.setUnit(normalize(request.getUnit()));
         if (request.getCategoryId() != null) item.setCategory(resolveCategory(groupId, request.getCategoryId()));
         if (request.getNotes() != null) item.setNotes(normalize(request.getNotes()));
         if (request.getPurchased() != null && !Objects.equals(item.getPurchased(), request.getPurchased())) {
@@ -180,10 +188,14 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
     }
 
     private Category resolveCategory(Long groupId, Long categoryId) {
-        if (categoryId == null) return null;
+        if (categoryId == null) {
+            return categoryRepository.findByShoppingGroup_IdAndName(groupId, DefaultCategory.FALLBACK_NAME)
+                .filter(category -> !Boolean.TRUE.equals(category.getArchived()))
+                .orElse(null);
+        }
         Category category = categoryRepository.findByIdAndShoppingGroup_Id(categoryId, groupId)
             .orElseThrow(() -> new ResourceNotFoundException("Category not found in this group"));
-        if (Boolean.TRUE.equals(category.getArchived())) throw new ConflictOperationException("Archived categories cannot be assigned to new items");
+        if (Boolean.TRUE.equals(category.getArchived())) throw new BadRequestException("Archived categories cannot be used");
         return category;
     }
 
@@ -202,9 +214,10 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
         return normalized;
     }
 
-    private void validateNumbers(BigDecimal quantity, BigDecimal price) {
-        if (quantity == null || quantity.signum() <= 0) throw new BadRequestException("Quantity must be greater than zero");
-        if (price != null && price.signum() < 0) throw new BadRequestException("Estimated price cannot be negative");
+    private void validatePrice(BigDecimal price) {
+        if (price == null) return;
+        if (price.signum() < 0) throw new BadRequestException("Estimated price cannot be negative");
+        if (price.compareTo(MAX_PRICE) > 0) throw new BadRequestException("Estimated price must be at most 999999");
     }
 
     private String normalize(String value) {
@@ -233,6 +246,8 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
         if (item.getCategory() != null) {
             dto.setCategoryId(item.getCategory().getId());
             dto.setCategoryName(item.getCategory().getName());
+            dto.setCategoryEmoji(item.getCategory().getEmoji());
+            dto.setCategoryColor(item.getCategory().getColor());
         }
         dto.setNotes(item.getNotes());
         dto.setCreatedByUserId(item.getCreatedByUser().getId());

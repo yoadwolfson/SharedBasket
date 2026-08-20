@@ -49,8 +49,9 @@ public class ShoppingItemRequest {
     @Column(nullable = false, precision = 12, scale = 3)
     private BigDecimal quantity = BigDecimal.ONE;
 
-    @Column(length = 20)
-    private String unit;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "unit", nullable = false, length = 20)
+    private ItemUnit unit = ItemUnit.PIECE;
 
     @Column(name = "estimated_price", precision = 12, scale = 2)
     private BigDecimal estimatedPrice;
@@ -89,8 +90,8 @@ public class ShoppingItemRequest {
     public void setName(String name) { this.name = name; }
     public BigDecimal getQuantity() { return quantity; }
     public void setQuantity(BigDecimal quantity) { this.quantity = quantity; }
-    public String getUnit() { return unit; }
-    public void setUnit(String unit) { this.unit = unit; }
+    public ItemUnit getUnit() { return unit; }
+    public void setUnit(ItemUnit unit) { this.unit = unit; }
     public BigDecimal getEstimatedPrice() { return estimatedPrice; }
     public void setEstimatedPrice(BigDecimal estimatedPrice) { this.estimatedPrice = estimatedPrice; }
     public String getNotes() { return notes; }

@@ -1,7 +1,9 @@
 package com.sharedbasket.service.impl;
 
 import com.sharedbasket.domain.Category;
+import com.sharedbasket.domain.DefaultCategory;
 import com.sharedbasket.domain.GroupMember;
+import com.sharedbasket.domain.ItemUnit;
 import com.sharedbasket.domain.SbGroup;
 import com.sharedbasket.domain.ShoppingItem;
 import com.sharedbasket.domain.ShoppingItemRequest;
@@ -22,6 +24,7 @@ import com.sharedbasket.repo.ShoppingItemRepository;
 import com.sharedbasket.repo.ShoppingItemRequestRepository;
 import com.sharedbasket.repo.UserRepository;
 import com.sharedbasket.service.ShoppingItemRequestService;
+import com.sharedbasket.util.QuantityNormalizer;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +42,7 @@ public class ShoppingItemRequestServiceImpl implements ShoppingItemRequestServic
 
     private static final String ACCEPTED = "ACCEPTED";
     private static final String ADMIN = "ADMIN";
+    private static final BigDecimal MAX_PRICE = new BigDecimal("999999");
 
     private final ShoppingItemRequestRepository requestRepository;
     private final ShoppingItemRepository itemRepository;
@@ -70,6 +74,7 @@ public class ShoppingItemRequestServiceImpl implements ShoppingItemRequestServic
         if (request == null) throw new BadRequestException("Request body is required");
         ShoppingItemRequest itemRequest = newRequest(groupId, currentUserId, ShoppingItemRequestType.ADD);
         copyCreateFields(itemRequest, groupId, request);
+        rejectDuplicateAdd(currentUserId, groupId, itemRequest.getName());
         return toDto(requestRepository.save(itemRequest));
     }
 
@@ -85,12 +90,14 @@ public class ShoppingItemRequestServiceImpl implements ShoppingItemRequestServic
         itemRequest.setShoppingItem(item);
         itemRequest.setItemVersion(item.getVersion());
         itemRequest.setName(request.getName() == null ? item.getName() : validateName(request.getName()));
-        itemRequest.setQuantity(request.getQuantity() == null ? item.getQuantity() : request.getQuantity());
-        itemRequest.setUnit(request.getUnit() == null ? item.getUnit() : normalize(request.getUnit()));
+        itemRequest.setUnit(request.getUnit() == null ? item.getUnit() : request.getUnit());
+        itemRequest.setQuantity(QuantityNormalizer.normalize(
+            request.getQuantity() == null ? item.getQuantity() : request.getQuantity(), itemRequest.getUnit()));
         itemRequest.setEstimatedPrice(request.getEstimatedPrice() == null ? item.getEstimatedPrice() : request.getEstimatedPrice());
         itemRequest.setCategory(request.getCategoryId() == null ? item.getCategory() : resolveCategory(groupId, request.getCategoryId()));
         itemRequest.setNotes(request.getNotes() == null ? item.getNotes() : normalize(request.getNotes()));
-        validateNumbers(itemRequest.getQuantity(), itemRequest.getEstimatedPrice());
+        QuantityNormalizer.validate(itemRequest.getQuantity(), itemRequest.getUnit());
+        validatePrice(itemRequest.getEstimatedPrice());
         return toDto(requestRepository.save(itemRequest));
     }
 
@@ -177,13 +184,15 @@ public class ShoppingItemRequestServiceImpl implements ShoppingItemRequestServic
     }
 
     private void copyCreateFields(ShoppingItemRequest target, Long groupId, CreateShoppingItemRequestDTO source) {
+        ItemUnit unit = source.getUnit() == null ? ItemUnit.PIECE : source.getUnit();
         target.setName(validateName(source.getName()));
-        target.setQuantity(source.getQuantity() == null ? BigDecimal.ONE : source.getQuantity());
-        target.setUnit(normalize(source.getUnit()));
+        target.setUnit(unit);
+        target.setQuantity(QuantityNormalizer.normalize(source.getQuantity(), unit));
         target.setEstimatedPrice(source.getEstimatedPrice());
         target.setCategory(resolveCategory(groupId, source.getCategoryId()));
         target.setNotes(normalize(source.getNotes()));
-        validateNumbers(target.getQuantity(), target.getEstimatedPrice());
+        QuantityNormalizer.validate(target.getQuantity(), unit);
+        validatePrice(target.getEstimatedPrice());
     }
 
     private void copyItemFields(ShoppingItemRequest target, ShoppingItem item) {
@@ -216,6 +225,17 @@ public class ShoppingItemRequestServiceImpl implements ShoppingItemRequestServic
         if (requestRepository.existsByShoppingGroup_IdAndRequestedByUser_IdAndShoppingItem_IdAndTypeAndStatus(
             groupId, userId, itemId, type, ShoppingItemRequestStatus.PENDING)) {
             throw new ConflictOperationException("A matching request is already pending");
+        }
+    }
+
+    private void rejectDuplicateAdd(Long userId, Long groupId, String normalizedName) {
+        boolean duplicate = requestRepository
+            .findByShoppingGroup_IdAndRequestedByUser_IdAndTypeAndStatus(
+                groupId, userId, ShoppingItemRequestType.ADD, ShoppingItemRequestStatus.PENDING)
+            .stream()
+            .anyMatch(pending -> pending.getName() != null && pending.getName().equalsIgnoreCase(normalizedName));
+        if (duplicate) {
+            throw new ConflictOperationException("You already have a pending add request for this item");
         }
     }
 
@@ -252,10 +272,14 @@ public class ShoppingItemRequestServiceImpl implements ShoppingItemRequestServic
     }
 
     private Category resolveCategory(Long groupId, Long categoryId) {
-        if (categoryId == null) return null;
+        if (categoryId == null) {
+            return categoryRepository.findByShoppingGroup_IdAndName(groupId, DefaultCategory.FALLBACK_NAME)
+                .filter(category -> !Boolean.TRUE.equals(category.getArchived()))
+                .orElse(null);
+        }
         Category category = categoryRepository.findByIdAndShoppingGroup_Id(categoryId, groupId)
             .orElseThrow(() -> new ResourceNotFoundException("Category not found in this group"));
-        if (Boolean.TRUE.equals(category.getArchived())) throw new ConflictOperationException("Archived categories cannot be assigned");
+        if (Boolean.TRUE.equals(category.getArchived())) throw new BadRequestException("Archived categories cannot be used");
         return category;
     }
 
@@ -274,9 +298,10 @@ public class ShoppingItemRequestServiceImpl implements ShoppingItemRequestServic
         return name;
     }
 
-    private void validateNumbers(BigDecimal quantity, BigDecimal price) {
-        if (quantity == null || quantity.signum() <= 0) throw new BadRequestException("Quantity must be greater than zero");
-        if (price != null && price.signum() < 0) throw new BadRequestException("Estimated price cannot be negative");
+    private void validatePrice(BigDecimal price) {
+        if (price == null) return;
+        if (price.signum() < 0) throw new BadRequestException("Estimated price cannot be negative");
+        if (price.compareTo(MAX_PRICE) > 0) throw new BadRequestException("Estimated price must be at most 999999");
     }
 
     private String normalize(String value) { return value == null || value.trim().isEmpty() ? null : value.trim(); }
@@ -303,6 +328,8 @@ public class ShoppingItemRequestServiceImpl implements ShoppingItemRequestServic
         if (request.getCategory() != null) {
             dto.setCategoryId(request.getCategory().getId());
             dto.setCategoryName(request.getCategory().getName());
+            dto.setCategoryEmoji(request.getCategory().getEmoji());
+            dto.setCategoryColor(request.getCategory().getColor());
         }
         dto.setNotes(request.getNotes());
         dto.setCreatedAt(request.getCreatedAt());

@@ -1,5 +1,7 @@
 package com.sharedbasket.dto;
 
+import com.sharedbasket.domain.ItemUnit;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 
@@ -9,7 +11,7 @@ public class UpdateShoppingItemRequestDTO implements Serializable {
 
     private String name;
     private BigDecimal quantity;
-    private String unit;
+    private ItemUnit unit;
     private BigDecimal estimatedPrice;
     private Long categoryId;
     private String notes;
@@ -23,8 +25,8 @@ public class UpdateShoppingItemRequestDTO implements Serializable {
     public void setName(String name) { this.name = name; }
     public BigDecimal getQuantity() { return quantity; }
     public void setQuantity(BigDecimal quantity) { this.quantity = quantity; }
-    public String getUnit() { return unit; }
-    public void setUnit(String unit) { this.unit = unit; }
+    public ItemUnit getUnit() { return unit; }
+    public void setUnit(ItemUnit unit) { this.unit = unit; }
     public BigDecimal getEstimatedPrice() { return estimatedPrice; }
     public void setEstimatedPrice(BigDecimal estimatedPrice) { this.estimatedPrice = estimatedPrice; }
     public Long getCategoryId() { return categoryId; }

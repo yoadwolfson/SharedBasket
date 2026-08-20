@@ -15,6 +15,7 @@ import com.sharedbasket.exception.ResourceNotFoundException;
 import com.sharedbasket.repo.GroupMemberRepository;
 import com.sharedbasket.repo.SbGroupRepository;
 import com.sharedbasket.repo.UserRepository;
+import com.sharedbasket.service.CategoryService;
 import com.sharedbasket.service.GroupService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,16 +46,19 @@ public class GroupServiceImpl implements GroupService {
     private final SbGroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final UserRepository userRepository;
+    private final CategoryService categoryService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public GroupServiceImpl(
         SbGroupRepository groupRepository,
         GroupMemberRepository groupMemberRepository,
-        UserRepository userRepository
+        UserRepository userRepository,
+        CategoryService categoryService
     ) {
         this.groupRepository = groupRepository;
         this.groupMemberRepository = groupMemberRepository;
         this.userRepository = userRepository;
+        this.categoryService = categoryService;
     }
 
     @Override
@@ -81,6 +85,7 @@ public class GroupServiceImpl implements GroupService {
         ownerMembership.setJoinedAt(Instant.now());
         ownerMembership.setDecidedAt(Instant.now());
         groupMemberRepository.save(ownerMembership);
+        categoryService.seedDefaultCategories(group.getId());
 
         return toGroupDTO(group, ownerMembership);
     }

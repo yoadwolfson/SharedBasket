@@ -6,6 +6,5 @@
 
 # VS Code local settings
 /.vscode/
-src/test/java/com/sharedbasket/service/impl/Phase4ServiceTest.java
-src/test/java/com/sharedbasket/controller/rest/CategoryControllerTest.java
-src/test/java/com/sharedbasket/controller/rest/ShoppingItemControllerTest.java
+/src/test/
+/plan/

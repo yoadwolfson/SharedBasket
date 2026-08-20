@@ -64,6 +64,21 @@
         <managed-bean-scope>request</managed-bean-scope>
     </managed-bean>
 
+    <converter>
+        <converter-id>trimmedString</converter-id>
+        <converter-class>com.sharedbasket.util.TrimmedStringConverter</converter-class>
+    </converter>
+
+    <validator>
+        <validator-id>wholeNumberForPiece</validator-id>
+        <validator-class>com.sharedbasket.util.WholeNumberForPieceValidator</validator-class>
+    </validator>
+
+    <validator>
+        <validator-id>currencyScale</validator-id>
+        <validator-class>com.sharedbasket.util.CurrencyScaleValidator</validator-class>
+    </validator>
+
     <application>
         <locale-config>
             <default-locale>en</default-locale>

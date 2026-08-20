@@ -10,8 +10,8 @@ import java.util.Optional;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 	List<Category> findByShoppingGroup_Id(Long groupId);
-	List<Category> findByShoppingGroup_IdOrderBySortOrderAscNameAsc(Long groupId);
-	List<Category> findByShoppingGroup_IdAndArchivedFalseOrderBySortOrderAscNameAsc(Long groupId);
+	List<Category> findByShoppingGroup_IdOrderByNameAsc(Long groupId);
+	List<Category> findByShoppingGroup_IdAndArchivedFalseOrderByNameAsc(Long groupId);
 	Optional<Category> findByShoppingGroup_IdAndName(Long groupId, String name);
 	Optional<Category> findByIdAndShoppingGroup_Id(Long categoryId, Long groupId);
 }
