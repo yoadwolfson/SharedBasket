@@ -63,7 +63,9 @@
                     styleClass="#{shoppingListController.addFormVisible ? 'sb-add-trigger-hidden' : ''}">
                     <h:commandButton value="+ New Item" action="#{shoppingListController.openAddForm}"
                                      rendered="#{not shoppingListController.addFormVisible}"
-                                     styleClass="sb-btn sb-btn-primary sb-add-item-trigger" />
+                                     styleClass="sb-btn sb-btn-primary sb-add-item-trigger">
+                        <f:ajax execute="@this" render=":shoppingWorkflow" onevent="sbFocusItemName" />
+                    </h:commandButton>
                 </h:form>
                 <h:panelGroup id="itemFormWrapper" layout="block"
                               styleClass="sb-item-form-wrapper #{shoppingListController.addFormVisible ? 'sb-item-form-open' : 'sb-item-form-closed'} #{facesContext.validationFailed ? 'sb-item-form-invalid' : ''}">
@@ -167,25 +169,23 @@
                             <table class="sb-table sb-shopping-table">
                                 <thead><tr><th>Requester</th><th>Request</th><th>Item</th><th>Quantity</th><th>Category</th><th>Est. Price</th><th>Notes</th><th>Actions</th></tr></thead>
                                 <tbody>
-                                    <ui:repeat value="#{shoppingListController.pendingRequests}" var="request">
+                                    <ui:repeat value="#{shoppingListController.pendingRequests}" var="itemRequest">
                                         <tr>
-                                            <td><h:outputText value="#{request.requestedByUserName}" /></td>
-                                            <td><span class="sb-badge sb-badge-pending"><h:outputText value="#{request.type}" /></span></td>
-                                            <td><h:outputText value="#{request.name}" /></td>
-                                            <td><h:outputText value="#{request.quantity} #{request.unitLabel}" /></td>
-                                            <td><h:outputText value="#{request.categoryEmoji} #{request.categoryName}" /></td>
-                                            <td><h:outputText value="#{request.estimatedPrice}" /></td>
-                                            <td><h:outputText value="#{request.notes}" /></td>
+                                            <td><h:outputText value="#{itemRequest.requestedByUserName}" /></td>
+                                            <td><span class="sb-badge sb-badge-pending"><h:outputText value="#{itemRequest.type}" /></span></td>
+                                            <td><h:outputText value="#{itemRequest.name}" /></td>
+                                            <td><h:outputText value="#{itemRequest.quantity} #{itemRequest.unitLabel}" /></td>
+                                            <td><h:outputText value="#{itemRequest.categoryEmoji} #{itemRequest.categoryName}" /></td>
+                                            <td><h:outputText value="#{itemRequest.estimatedPrice}" /></td>
+                                            <td><h:outputText value="#{itemRequest.notes}" /></td>
                                             <td>
                                                 <h:form styleClass="sb-item-actions">
-                                                    <h:commandButton value="Approve" action="#{shoppingListController.approveRequest(request)}"
+                                                    <h:commandButton value="Approve" action="#{shoppingListController.approveRequest(itemRequest)}"
                                                                      styleClass="sb-btn sb-btn-success">
                                                         <f:ajax execute="@this" render=":shoppingWorkflow :globalMessages" />
                                                     </h:commandButton>
-                                                    <h:commandButton value="Reject" action="#{shoppingListController.rejectRequest(request)}"
-                                                                     styleClass="sb-btn sb-btn-danger">
-                                                        <f:ajax execute="@this" render=":shoppingWorkflow :globalMessages" />
-                                                    </h:commandButton>
+                                                    <h:commandButton value="Reject" action="#{shoppingListController.rejectRequest(itemRequest)}"
+                                                                     styleClass="sb-btn sb-btn-danger" />
                                                 </h:form>
                                             </td>
                                         </tr>
@@ -204,10 +204,10 @@
                     </h:panelGroup>
                     <h:panelGroup rendered="#{not empty shoppingListController.myRequests}" layout="block">
                         <div class="sb-request-status-list">
-                            <ui:repeat value="#{shoppingListController.myRequests}" var="request">
+                            <ui:repeat value="#{shoppingListController.myRequests}" var="itemRequest">
                                 <div class="sb-request-status-row">
-                                    <span><h:outputText value="#{request.type} - #{request.name}" /></span>
-                                    <span class="sb-badge sb-badge-neutral"><h:outputText value="#{request.status}" /></span>
+                                    <span><h:outputText value="#{itemRequest.type} - #{itemRequest.name}" /></span>
+                                    <span class="sb-badge sb-badge-neutral"><h:outputText value="#{itemRequest.status}" /></span>
                                 </div>
                             </ui:repeat>
                         </div>
