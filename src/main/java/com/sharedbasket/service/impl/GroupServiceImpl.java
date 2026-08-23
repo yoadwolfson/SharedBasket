@@ -280,10 +280,31 @@ public class GroupServiceImpl implements GroupService {
             throw new ConflictOperationException("Only accepted members can leave a group");
         }
 
+        List<GroupMember> acceptedMembers = groupMemberRepository.findByShoppingGroup_IdAndStatus(groupId, STATUS_ACCEPTED);
+        if (acceptedMembers.size() == 1 && Objects.equals(acceptedMembers.get(0).getUser().getId(), currentUserId)) {
+            groupRepository.delete(membership.getShoppingGroup());
+            return;
+        }
+
         if (ROLE_ADMIN.equals(membership.getRole())) {
             long adminCount = groupMemberRepository.countByShoppingGroup_IdAndRoleAndStatus(groupId, ROLE_ADMIN, STATUS_ACCEPTED);
             if (adminCount <= 1) {
-                throw new ConflictOperationException("Last admin cannot leave group before assigning another admin");
+                List<GroupMember> promotionCandidates = acceptedMembers.stream()
+                    .filter(member -> !Objects.equals(member.getUser().getId(), currentUserId))
+                    .collect(Collectors.toList());
+
+                if (promotionCandidates.isEmpty()) {
+                    throw new ConflictOperationException("No eligible member found to promote as admin");
+                }
+
+                GroupMember promotedAdmin = promotionCandidates.get(secureRandom.nextInt(promotionCandidates.size()));
+                promotedAdmin.setRole(ROLE_ADMIN);
+                groupMemberRepository.save(promotedAdmin);
+
+                SbGroup group = membership.getShoppingGroup();
+                group.setOwnerUser(promotedAdmin.getUser());
+                group.setUpdatedAt(Instant.now());
+                groupRepository.save(group);
             }
         }
 
