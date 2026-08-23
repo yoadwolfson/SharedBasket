@@ -43,7 +43,7 @@
                             </div>
                             <h:commandButton value="Create Group" action="#{groupsController.createGroup}"
                                              styleClass="sb-btn sb-btn-primary sb-btn-block">
-                                <f:ajax execute="@form" render=":alertsPanel :groupsListPanel" />
+                                <f:ajax execute="@form" render=":alertsPanel :groupsListPanel groupName" />
                             </h:commandButton>
                         </h:form>
 
@@ -59,7 +59,7 @@
                             </div>
                             <h:commandButton value="Join Group" action="#{groupsController.joinByCode}"
                                                  styleClass="sb-btn sb-btn-primary sb-btn-block">
-                                <f:ajax execute="@form" render=":alertsPanel :groupsListPanel" />
+                                <f:ajax execute="@form" render=":alertsPanel :groupsListPanel inviteCode" />
                             </h:commandButton>
                         </h:form>
 
@@ -75,7 +75,7 @@
                             </div>
                             <h:commandButton value="Send Request" action="#{groupsController.requestToJoin}"
                                              styleClass="sb-btn sb-btn-primary sb-btn-block">
-                                <f:ajax execute="@form" render=":alertsPanel" />
+                                <f:ajax execute="@form" render=":alertsPanel requestGroupId" />
                             </h:commandButton>
                         </h:form>
 

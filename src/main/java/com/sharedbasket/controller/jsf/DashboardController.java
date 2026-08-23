@@ -140,10 +140,10 @@ public class DashboardController implements Serializable {
         alerts.add(new AlertDTO("error", message));
     }
     /**
-     * Adds a new item to the shopping list and displays a success alert.
+     * Navigates to the shopping list page to add a new item.
      */
-    public void addItemToList() {
-        addSuccessAlert("Item added to shopping list");
+    public String addItemToList() {
+        return "/shopping-list.xhtml?faces-redirect=true";
     }
 // Navigational methods to redirect to different pages in the application.
     public String goToShoppingList() { return "/shopping-list.xhtml?faces-redirect=true"; }
