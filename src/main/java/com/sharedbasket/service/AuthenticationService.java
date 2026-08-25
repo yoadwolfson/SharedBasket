@@ -6,18 +6,6 @@ import com.sharedbasket.dto.UserDTO;
  * Authentication Service Interface
  * 
  * This interface defines the contract for authentication and session management.
- * The implementation is provided by Developer A's authentication module.
- * 
- * DEV-A Connection Point:
- * @DevAConnection Provider=DeveloperA, Service=AuthenticationService, Type=ServiceContract
- *                Context: This interface must be implemented by Developer A's authentication service.
- *                         Developer B consumes this service for shell-level session management.
- *                Integration: Implementation must be injected into ShellController and other
- *                             components that need authentication.
- *                Expected Operations:
- *                  - getCurrentUser(): UserDTO - returns authenticated user from session
- *                  - logout(): void - clears session and invalidates authentication
- *                  - isAuthenticated(): boolean - checks if user has valid session
  */
 public interface AuthenticationService {
     

@@ -2,17 +2,6 @@ package com.sharedbasket.dto;
 
 import java.io.Serializable;
 
-/**
- * Field Error Data Transfer Object (FieldErrorDTO)
- * 
- * Represents a validation or constraint error for a specific form field.
- * Provides detailed error information for frontend rendering and user feedback.
- * 
- * DEV-A Connection Point:
- * @DevAConnection Provider=DeveloperA, Service=Various, Type=FieldErrorContract
- *                Context: Field-level errors from Developer A's REST endpoints must conform
- *                         to this structure for consistent validation feedback in the JSF layer.
- */
 public class FieldErrorDTO implements Serializable {
     
     private static final long serialVersionUID = 1L;

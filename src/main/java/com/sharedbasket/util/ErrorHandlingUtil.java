@@ -6,18 +6,6 @@ import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import java.util.List;
 
-/**
- * Error Handling Utility Class
- * 
- * Provides centralized error handling and message rendering for the JSF layer.
- * Converts ErrorResponseDTO objects from backend responses into FacesMessage
- * objects for display in the JSF framework.
- * 
- * DEV-A Connection Point:
- * @DevAConnection Provider=DeveloperA, Service=Various, Type=ErrorHandlingContract
- *                Context: This utility processes error responses from Developer A's REST endpoints.
- *                Integration: Used by all page controllers that consume Developer A's services.
- */
 public class ErrorHandlingUtil {
     
     /**

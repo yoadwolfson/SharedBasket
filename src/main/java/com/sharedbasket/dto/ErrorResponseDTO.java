@@ -3,30 +3,6 @@ package com.sharedbasket.dto;
 import java.io.Serializable;
 import java.util.List;
 
-/**
- * Error Response Data Transfer Object (ErrorResponseDTO)
- * 
- * Represents error responses from REST endpoints. This DTO standardizes how
- * validation errors, business logic errors, and system errors are communicated
- * from the backend to the JSF frontend.
- * 
- * DEV-A Connection Point:
- * @DevAConnection Provider=DeveloperA, Service=Various, Type=ErrorResponseContract
- *                Context: Error responses from Developer A's REST endpoints (auth, categories, items, reporting)
- *                         must conform to this structure for consistent frontend error handling.
- *                Integration: Developers must ensure backend error responses match this shape.
- *                Expected Shape:
- *                  {
- *                    "timestamp": "2026-06-16T10:30:00Z",
- *                    "status": 400,
- *                    "error": "Bad Request",
- *                    "message": "Validation failed",
- *                    "fieldErrors": [
- *                      { "fieldName": "email", "message": "Email is invalid", "errorCode": "INVALID_EMAIL" },
- *                      { "fieldName": "password", "message": "Password must be at least 8 characters", "errorCode": "INVALID_PASSWORD" }
- *                    ]
- *                  }
- */
 public class ErrorResponseDTO implements Serializable {
     
     private static final long serialVersionUID = 1L;

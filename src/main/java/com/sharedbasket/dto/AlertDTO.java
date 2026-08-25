@@ -2,18 +2,7 @@ package com.sharedbasket.dto;
 
 import java.io.Serializable;
 
-/**
- * Alert Data Transfer Object (AlertDTO)
- * 
- * Represents an alert or notification message for display to the user.
- * Used by the shell's alert rendering system to show messages of various types.
- * 
- * Alert Types:
- *  - "success": Operation completed successfully
- *  - "error": An error occurred
- *  - "warning": Warning message
- *  - "info": Informational message
- */
+
 public class AlertDTO implements Serializable {
     
     private static final long serialVersionUID = 1L;

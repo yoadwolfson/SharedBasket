@@ -28,12 +28,7 @@ import org.slf4j.LoggerFactory;
  * - Coordinating authentication state with Developer A's authentication service
  * - Managing global alerts and notifications
  * - Providing common navigation actions
- * - Maintaining shell-level state
- * 
- * DEV-A Connection Points:
- * @DevAConnection Provider=DeveloperA, Service=AuthenticationService, Type=Dependency
- *                Context: Shell depends on Developer A's AuthenticationService for session management.
- *                Integration: Injected AuthenticationService from Developer A's module.
+ * - Maintaining shell-level state such as the current user and selected group
  */
 @ManagedBean(name = "shellController")
 @SessionScoped
@@ -57,11 +52,8 @@ public class ShellController implements Serializable {
     }
     
     /**
-     * Initialize current user from Developer A's session.
-     * 
-     * DEV-A Connection Point:
-     * @DevAConnection Provider=DeveloperA, Service=AuthenticationService, Type=UserRetrieval
-     *                Expected: getCurrentUser() returns UserDTO with id, email, fullName, role properties.
+     * Initialize current user by syncing with the authentication service.
+     * If the user is not authenticated, redirect to the login page.
      */
     private void initializeCurrentUser() {
         try {
@@ -111,11 +103,6 @@ public class ShellController implements Serializable {
     
     /**
      * Logout user.
-     * 
-     * DEV-A Connection Point:
-     * @DevAConnection Provider=DeveloperA, Service=AuthenticationService, Type=LogoutOperation
-     *                Context: Delegates logout to Developer A's authentication service.
-     *                Expected: logout() clears session and returns authentication status.
      */
     public String logout() {
         try {

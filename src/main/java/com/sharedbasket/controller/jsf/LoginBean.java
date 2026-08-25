@@ -1,6 +1,5 @@
 package com.sharedbasket.controller.jsf;
 
-import com.sharedbasket.controller.jsf.ShellController;
 import com.sharedbasket.dto.LoginRequestDTO;
 import com.sharedbasket.dto.UserDTO;
 import com.sharedbasket.util.JsfRestClientSupport;

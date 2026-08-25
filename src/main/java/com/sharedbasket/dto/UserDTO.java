@@ -1,24 +1,6 @@
 package com.sharedbasket.dto;
 
 import java.io.Serializable;
-
-/**
- * User Data Transfer Object (UserDTO)
- * 
- * Represents a user in the system with authentication and profile information.
- * This DTO is shared across the application and serves as the contract for
- * user data between the backend and frontend.
- * 
- * DEV-A Connection Point:
- * @DevAConnection Provider=DeveloperA, Service=AuthenticationService, Type=UserDataContract
- *                Context: This DTO must match the shape of user objects returned by Developer A's 
- *                         AuthenticationService.getCurrentUser() and user-related endpoints.
- *                Expected Fields from Developer A:
- *                  - id: Long (unique user identifier)
- *                  - email: String (user email address)
- *                  - fullName: String (user's full name)
- *                  - role: String ("ADMIN" | "MEMBER") - role within a group context
- */
 public class UserDTO implements Serializable {
     
     private static final long serialVersionUID = 1L;

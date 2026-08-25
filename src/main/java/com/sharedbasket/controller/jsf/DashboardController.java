@@ -4,7 +4,6 @@ import com.sharedbasket.dto.AlertDTO;
 import com.sharedbasket.dto.RecommendationDTO;
 import com.sharedbasket.dto.ShoppingItemDTO;
 import com.sharedbasket.dto.StatisticsDTO;
-import com.sharedbasket.util.FrontendDtoAdapter;
 import com.sharedbasket.util.JsfRestClientSupport;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
