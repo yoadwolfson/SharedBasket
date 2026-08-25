@@ -65,6 +65,9 @@ public class ShoppingListController implements Serializable {
     private Long editingItemVersion;
     private boolean addFormVisible = false;
 
+    private String lastPollSignature;
+    private String pollRenderTargets = "";
+
     @PostConstruct
     public void init() {
         this.restTemplate = resolveSpringBean(RestTemplate.class);
@@ -596,6 +599,47 @@ public class ShoppingListController implements Serializable {
         if (selectedGroupId != null) {
             loadRequests();
         }
+    }
+
+    /**
+     * Silently refreshes the shopping list and requests for background ajax polling, so other
+     * members' changes appear without a manual reload.
+     */
+    public void pollRefresh() {
+        if (selectedGroupId == null) {
+            pollRenderTargets = "";
+            return;
+        }
+        refreshShoppingState();
+        String signature = pollSignature();
+        // Only ask the client to replace the DOM when something actually changed, otherwise a
+        // periodic no-op render can swallow a user's click on a button mid-swap.
+        pollRenderTargets = signature.equals(lastPollSignature) ? "" : ":shoppingAlerts :shoppingItemsTable";
+        lastPollSignature = signature;
+    }
+
+    /**
+     * Builds a lightweight signature of the currently loaded items/requests/alerts, used to
+     * detect whether a background poll actually changed anything worth rendering.
+     */
+    private String pollSignature() {
+        StringBuilder sb = new StringBuilder();
+        for (ShoppingItemDTO item : shoppingItems) {
+            sb.append("i:").append(item.getId()).append(':').append(item.getVersion())
+                .append(':').append(item.getPurchased()).append(';');
+        }
+        for (ShoppingItemRequestDTO request : pendingRequests) {
+            sb.append("p:").append(request.getId()).append(':').append(request.getStatus()).append(';');
+        }
+        for (ShoppingItemRequestDTO request : myRequests) {
+            sb.append("m:").append(request.getId()).append(':').append(request.getStatus()).append(';');
+        }
+        sb.append("a:").append(alerts.size());
+        return sb.toString();
+    }
+
+    public String getPollRenderTargets() {
+        return pollRenderTargets;
     }
 
 // add alert messages to the list.

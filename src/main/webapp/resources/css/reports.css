@@ -1,0 +1,23 @@
+.sb-report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0 2rem;
+}
+
+.sb-report-table th,
+.sb-report-table td {
+    padding: 0.6rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #dbe2e8;
+    vertical-align: middle;
+}
+
+.sb-report-table th {
+    white-space: nowrap;
+    color: #243746;
+    background-color: #f4f6f8;
+}
+
+.sb-report-table tbody tr:hover {
+    background-color: #f9fafb;
+}

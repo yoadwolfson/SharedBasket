@@ -17,6 +17,8 @@ public interface PurchaseRecordRepository extends JpaRepository<PurchaseRecord, 
 	List<PurchaseRecord> findByShoppingGroup_IdAndPurchasedAtBetweenOrderByPurchasedAtDesc(
 		Long groupId, Instant from, Instant to);
 
+	void deleteByShoppingItem_IdAndPurchasedAt(Long shoppingItemId, Instant purchasedAt);
+
 	@Query("select coalesce(sum(pr.pricePaid), 0) from PurchaseRecord pr " +
 		"where pr.shoppingGroup.id = :groupId and pr.purchasedAt between :from and :to")
 	java.math.BigDecimal sumSpendByGroupAndDateRange(

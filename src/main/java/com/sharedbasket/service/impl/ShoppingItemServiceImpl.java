@@ -168,6 +168,11 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
                 recordPurchase(item, purchaser, purchasedAt);
             }
         } else {
+            // Undo the history entry created by the purchase this action reverses, otherwise a
+            // later re-purchase would create a second record and double-count in reports.
+            if (wasPurchased && item.getId() != null && item.getPurchasedAt() != null) {
+                purchaseRecordRepository.deleteByShoppingItem_IdAndPurchasedAt(item.getId(), item.getPurchasedAt());
+            }
             item.setPurchasedAt(null);
             item.setPurchasedByUser(null);
         }

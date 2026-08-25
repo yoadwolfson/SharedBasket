@@ -305,6 +305,73 @@
                 }
             }
         </h:outputScript>
+
+        <!-- Background poll: keeps this screen in sync with item/request changes made by other
+             members of the group, without a manual page reload. -->
+        <h:form id="pollForm" style="display:none;">
+            <h:commandButton id="pollBtn" value="poll" action="#{shoppingListController.pollRefresh}">
+                <f:ajax execute="@this" render="#{shoppingListController.pollRenderTargets}" />
+            </h:commandButton>
+        </h:form>
+        <script type="text/javascript">
+            //<![CDATA[
+            (function () {
+                var sbAjaxBusy = false;
+
+                // Mojarra does not always write the javax.faces.ViewState hidden field into a
+                // <h:form> that is newly revealed by a partial ajax update. Without that field
+                // its next postback can't be correlated to the server-side view, so the action is
+                // silently never invoked. After every ajax response, copy a known-good ViewState
+                // value into every form on the page so all of them stay submittable.
+                function syncViewState() {
+                    var forms = document.forms;
+                    var canonical = null;
+                    for (var i = 0; i < forms.length; i++) {
+                        var input = forms[i].elements['javax.faces.ViewState'];
+                        if (input && input.value) {
+                            canonical = input.value;
+                            break;
+                        }
+                    }
+                    if (!canonical) {
+                        return;
+                    }
+                    for (var j = 0; j < forms.length; j++) {
+                        var existing = forms[j].elements['javax.faces.ViewState'];
+                        if (!existing) {
+                            existing = document.createElement('input');
+                            existing.type = 'hidden';
+                            existing.name = 'javax.faces.ViewState';
+                            forms[j].appendChild(existing);
+                        }
+                        existing.value = canonical;
+                    }
+                }
+
+                if (typeof jsf !== 'undefined' && jsf.ajax) {
+                    jsf.ajax.addOnEvent(function (data) {
+                        sbAjaxBusy = data.status === 'begin';
+                        if (data.status === 'success') {
+                            syncViewState();
+                        }
+                    });
+                }
+                syncViewState();
+
+                setInterval(function () {
+                    // Skip this tick if an ajax request (poll or user action) is already in
+                    // flight, otherwise overlapping requests corrupt the shared JSF view state.
+                    if (sbAjaxBusy) {
+                        return;
+                    }
+                    var pollButton = document.getElementById('pollForm:pollBtn');
+                    if (pollButton) {
+                        pollButton.click();
+                    }
+                }, 4000);
+            })();
+            //]]>
+        </script>
     </ui:define>
 
 </ui:composition>

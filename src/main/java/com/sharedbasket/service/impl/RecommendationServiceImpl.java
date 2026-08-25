@@ -193,7 +193,9 @@ public class RecommendationServiceImpl implements RecommendationService {
         StringBuilder sb = new StringBuilder("Bought ").append(frequency)
             .append(frequency == 1 ? " time" : " times")
             .append(" in the last ").append(LOOKBACK_DAYS).append(" days");
-        if (daysSinceLastPurchase >= 0) {
+        if (daysSinceLastPurchase == 0) {
+            sb.append(", last purchased today");
+        } else if (daysSinceLastPurchase > 0) {
             sb.append(", last purchased ").append(daysSinceLastPurchase).append(" days ago");
         }
         return sb.toString();

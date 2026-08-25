@@ -21,7 +21,6 @@
                 <div class="sb-widget sb-shopping-widget">
                     <h3 class="sb-widget-title">Active Shopping List</h3>
                     <div class="sb-widget-content">
-                        <p class="sb-placeholder-text">Loading shopping list items...</p>
                         <h:panelGroup layout="block" rendered="#{not empty dashboardController.shoppingItems}">
                             <ul class="sb-item-list">
                                 <ui:repeat var="item" value="#{dashboardController.shoppingItems}">
@@ -42,7 +41,6 @@
                 <div class="sb-widget sb-stats-widget">
                     <h3 class="sb-widget-title">Statistics Summary</h3>
                     <div class="sb-widget-content">
-                        <p class="sb-placeholder-text">Loading statistics...</p>
                         <h:panelGroup layout="block" rendered="#{not empty dashboardController.statistics}" styleClass="sb-stats-grid">
                             <div class="sb-stat-item">
                                 <span class="sb-stat-label">Total Items</span>
@@ -66,7 +64,6 @@
                 <div class="sb-widget sb-recommendations-widget">
                     <h3 class="sb-widget-title">Recommended Items</h3>
                     <div class="sb-widget-content">
-                        <p class="sb-placeholder-text">Loading recommendations...</p>
                         <h:panelGroup layout="block" rendered="#{not empty dashboardController.recommendations}" styleClass="sb-recommendations-list">
                             <ui:repeat var="rec" value="#{dashboardController.recommendations}">
                                 <div class="sb-recommendation-item">
