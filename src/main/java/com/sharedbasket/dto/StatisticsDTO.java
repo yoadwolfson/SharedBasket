@@ -10,7 +10,7 @@ public class StatisticsDTO implements Serializable {
     private int itemsPurchased;
     private Instant periodStart;
     private Instant periodEnd;
-    private String currency = "USD";
+    private String currency = "NIS";
 
     public StatisticsDTO() {}
     public StatisticsDTO(int totalItems, double totalCost, int itemsPurchased) {

@@ -4,6 +4,7 @@ import com.sharedbasket.domain.Category;
 import com.sharedbasket.domain.DefaultCategory;
 import com.sharedbasket.domain.GroupMember;
 import com.sharedbasket.domain.ItemUnit;
+import com.sharedbasket.domain.PurchaseRecord;
 import com.sharedbasket.domain.SbGroup;
 import com.sharedbasket.domain.ShoppingItem;
 import com.sharedbasket.domain.User;
@@ -16,6 +17,7 @@ import com.sharedbasket.exception.ForbiddenOperationException;
 import com.sharedbasket.exception.ResourceNotFoundException;
 import com.sharedbasket.repo.CategoryRepository;
 import com.sharedbasket.repo.GroupMemberRepository;
+import com.sharedbasket.repo.PurchaseRecordRepository;
 import com.sharedbasket.repo.SbGroupRepository;
 import com.sharedbasket.repo.ShoppingItemRepository;
 import com.sharedbasket.repo.UserRepository;
@@ -43,17 +45,20 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
     private final ShoppingItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
     private final GroupMemberRepository groupMemberRepository;
+    private final PurchaseRecordRepository purchaseRecordRepository;
     private final SbGroupRepository groupRepository;
     private final UserRepository userRepository;
 
     public ShoppingItemServiceImpl(ShoppingItemRepository itemRepository,
                                    CategoryRepository categoryRepository,
                                    GroupMemberRepository groupMemberRepository,
+                                   PurchaseRecordRepository purchaseRecordRepository,
                                    SbGroupRepository groupRepository,
                                    UserRepository userRepository) {
         this.itemRepository = itemRepository;
         this.categoryRepository = categoryRepository;
         this.groupMemberRepository = groupMemberRepository;
+        this.purchaseRecordRepository = purchaseRecordRepository;
         this.groupRepository = groupRepository;
         this.userRepository = userRepository;
     }
@@ -147,15 +152,44 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
         itemRepository.delete(getItem(groupId, itemId));
     }
 
+    /**
+     * Applies purchase-state transitions and records immutable purchase history entries
+     * only when an item transitions from unpurchased to purchased.
+     */
     private void applyPurchaseState(ShoppingItem item, Long userId, boolean purchased) {
+        boolean wasPurchased = Boolean.TRUE.equals(item.getPurchased());
         item.setPurchased(purchased);
         if (purchased) {
-            item.setPurchasedAt(Instant.now());
-            item.setPurchasedByUser(getUser(userId));
+            User purchaser = getUser(userId);
+            Instant purchasedAt = Instant.now();
+            item.setPurchasedAt(purchasedAt);
+            item.setPurchasedByUser(purchaser);
+            if (!wasPurchased) {
+                recordPurchase(item, purchaser, purchasedAt);
+            }
         } else {
             item.setPurchasedAt(null);
             item.setPurchasedByUser(null);
         }
+    }
+
+    /**
+     * Writes a purchase snapshot so reporting and recommendations are based on stored history,
+     * not mutable current shopping-item state.
+     */
+    private void recordPurchase(ShoppingItem item, User purchaser, Instant purchasedAt) {
+        PurchaseRecord record = new PurchaseRecord();
+        record.setShoppingGroup(item.getShoppingGroup());
+        record.setShoppingItem(item);
+        record.setCategory(item.getCategory());
+        record.setItemName(item.getName());
+        record.setPurchasedByUser(purchaser);
+        record.setQuantity(item.getQuantity());
+        record.setUnit(item.getUnit() == null ? null : item.getUnit().name());
+        record.setPricePaid(item.getEstimatedPrice());
+        record.setPurchasedAt(purchasedAt);
+        record.setNotes(item.getNotes());
+        purchaseRecordRepository.save(record);
     }
 
     private ShoppingItemDTO saveWithConflict(ShoppingItem item) {

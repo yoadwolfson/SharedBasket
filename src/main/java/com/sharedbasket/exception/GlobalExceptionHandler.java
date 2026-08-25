@@ -1,6 +1,7 @@
 package com.sharedbasket.exception;
 
 import com.sharedbasket.dto.ErrorResponseDTO;
+import com.sharedbasket.dto.FieldErrorDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -8,6 +9,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -38,7 +41,10 @@ public class GlobalExceptionHandler {
             .findFirst()
             .map(error -> error.getDefaultMessage())
             .orElse("Request validation failed");
-        return build(HttpStatus.BAD_REQUEST, message);
+        List<FieldErrorDTO> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
+            .map(error -> new FieldErrorDTO(error.getField(), error.getDefaultMessage(), error.getCode(), error.getRejectedValue()))
+            .collect(Collectors.toList());
+        return build(HttpStatus.BAD_REQUEST, message, fieldErrors);
     }
 
     @ExceptionHandler(Exception.class)
@@ -47,8 +53,13 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<ErrorResponseDTO> build(HttpStatus status, String message) {
+        return build(status, message, null);
+    }
+
+    private ResponseEntity<ErrorResponseDTO> build(HttpStatus status, String message, List<FieldErrorDTO> fieldErrors) {
         ErrorResponseDTO dto = new ErrorResponseDTO(status.value(), status.getReasonPhrase(), message);
         dto.setTimestamp(Instant.now().toString());
+        dto.setFieldErrors(fieldErrors);
         return ResponseEntity.status(status).body(dto);
     }
 }

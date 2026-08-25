@@ -36,7 +36,7 @@
                 <h:panelGroup layout="block" rendered="#{not empty reportsController.statistics}" styleClass="sb-stats-grid">
                     <div class="sb-stat-item">
                         <span class="sb-stat-label">Total Cost</span>
-                        <span class="sb-stat-value">$#{reportsController.statistics.totalCost}</span>
+                        <span class="sb-stat-value">₪#{reportsController.statistics.totalCost}</span>
                     </div>
                     <div class="sb-stat-item">
                         <span class="sb-stat-label">Items Purchased</span>
@@ -57,7 +57,7 @@
                             <ui:repeat var="row" value="#{reportsController.spendingByCategory}">
                                 <tr>
                                     <td>#{row.categoryName}</td>
-                                    <td>$#{row.amount}</td>
+                                    <td>₪#{row.amount}</td>
                                     <td>#{row.quantity}</td>
                                     <td>#{row.percentageOfTotal}%</td>
                                 </tr>
@@ -79,7 +79,7 @@
                             <ui:repeat var="row" value="#{reportsController.spendingByProduct}">
                                 <tr>
                                     <td>#{row.productName}</td>
-                                    <td>$#{row.amount}</td>
+                                    <td>₪#{row.amount}</td>
                                     <td>#{row.quantity}</td>
                                     <td>#{row.percentageOfTotal}%</td>
                                 </tr>
@@ -103,7 +103,7 @@
                                     <td>#{entry.itemName}</td>
                                     <td>#{entry.categoryName}</td>
                                     <td>#{entry.quantity} #{entry.unit}</td>
-                                    <td>$#{entry.pricePaid}</td>
+                                    <td>₪#{entry.pricePaid}</td>
                                     <td><h:outputText value="#{entry.purchasedAt}" /></td>
                                     <td>#{entry.purchasedByUserName}</td>
                                 </tr>
