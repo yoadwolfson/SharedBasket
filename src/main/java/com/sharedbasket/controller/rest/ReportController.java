@@ -31,6 +31,9 @@ public class ReportController {
         this.authenticationService = authenticationService;
     }
 
+    /**
+     * Returns top-level spend and purchase counts for a group within a time window.
+     */
     @GetMapping("/statistics")
     public StatisticsDTO getStatistics(
             @RequestParam Long groupId,
@@ -39,6 +42,9 @@ public class ReportController {
         return reportService.getStatistics(getCurrentUserId(), groupId, resolveFrom(from), resolveTo(to));
     }
 
+    /**
+     * Returns aggregated spending grouped by category for the selected group and period.
+     */
     @GetMapping("/spending-by-category")
     public List<SpendingByCategoryDTO> getSpendingByCategory(
             @RequestParam Long groupId,
@@ -47,6 +53,9 @@ public class ReportController {
         return reportService.getSpendingByCategory(getCurrentUserId(), groupId, resolveFrom(from), resolveTo(to));
     }
 
+    /**
+     * Returns aggregated spending grouped by product for the selected group and period.
+     */
     @GetMapping("/spending-by-product")
     public List<SpendingByProductDTO> getSpendingByProduct(
             @RequestParam Long groupId,
@@ -55,6 +64,9 @@ public class ReportController {
         return reportService.getSpendingByProduct(getCurrentUserId(), groupId, resolveFrom(from), resolveTo(to));
     }
 
+    /**
+     * Returns detailed purchase history rows for timeline and auditing views.
+     */
     @GetMapping("/purchase-history")
     public List<PurchaseHistoryEntryDTO> getPurchaseHistory(
             @RequestParam Long groupId,

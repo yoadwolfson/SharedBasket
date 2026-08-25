@@ -5,6 +5,7 @@ import com.sharedbasket.dto.PurchaseHistoryEntryDTO;
 import com.sharedbasket.dto.SpendingByCategoryDTO;
 import com.sharedbasket.dto.SpendingByProductDTO;
 import com.sharedbasket.dto.StatisticsDTO;
+import com.sharedbasket.exception.BadRequestException;
 import com.sharedbasket.exception.ForbiddenOperationException;
 import com.sharedbasket.repo.GroupMemberRepository;
 import com.sharedbasket.repo.PurchaseRecordRepository;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,23 +37,28 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public StatisticsDTO getStatistics(Long currentUserId, Long groupId, Instant from, Instant to) {
+        requireReportInput(groupId);
+        Instant[] window = normalizeWindow(from, to);
         requireMember(groupId, currentUserId);
-        BigDecimal totalCost = purchaseRecordRepository.sumSpendByGroupAndDateRange(groupId, from, to);
-        long itemsPurchased = purchaseRecordRepository.countByGroupAndDateRange(groupId, from, to);
+        BigDecimal totalCost = purchaseRecordRepository.sumSpendByGroupAndDateRange(groupId, window[0], window[1]);
+        long itemsPurchased = purchaseRecordRepository.countByGroupAndDateRange(groupId, window[0], window[1]);
 
         StatisticsDTO dto = new StatisticsDTO();
         dto.setTotalItems((int) itemsPurchased);
         dto.setTotalCost(totalCost.doubleValue());
         dto.setItemsPurchased((int) itemsPurchased);
-        dto.setPeriodStart(from);
-        dto.setPeriodEnd(to);
+        dto.setPeriodStart(window[0]);
+        dto.setPeriodEnd(window[1]);
+        dto.setCurrency("NIS");
         return dto;
     }
 
     @Override
     public List<SpendingByCategoryDTO> getSpendingByCategory(Long currentUserId, Long groupId, Instant from, Instant to) {
+        requireReportInput(groupId);
+        Instant[] window = normalizeWindow(from, to);
         requireMember(groupId, currentUserId);
-        List<Object[]> rows = purchaseRecordRepository.sumSpendByCategory(groupId, from, to);
+        List<Object[]> rows = purchaseRecordRepository.sumSpendByCategory(groupId, window[0], window[1]);
         BigDecimal total = rows.stream()
             .map(row -> (BigDecimal) row[1])
             .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -67,8 +74,10 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<SpendingByProductDTO> getSpendingByProduct(Long currentUserId, Long groupId, Instant from, Instant to) {
+        requireReportInput(groupId);
+        Instant[] window = normalizeWindow(from, to);
         requireMember(groupId, currentUserId);
-        List<Object[]> rows = purchaseRecordRepository.sumSpendByProduct(groupId, from, to);
+        List<Object[]> rows = purchaseRecordRepository.sumSpendByProduct(groupId, window[0], window[1]);
         BigDecimal total = rows.stream()
             .map(row -> (BigDecimal) row[1])
             .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -84,9 +93,11 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<PurchaseHistoryEntryDTO> getPurchaseHistory(Long currentUserId, Long groupId, Instant from, Instant to) {
+        requireReportInput(groupId);
+        Instant[] window = normalizeWindow(from, to);
         requireMember(groupId, currentUserId);
         return purchaseRecordRepository
-            .findByShoppingGroup_IdAndPurchasedAtBetweenOrderByPurchasedAtDesc(groupId, from, to)
+            .findByShoppingGroup_IdAndPurchasedAtBetweenOrderByPurchasedAtDesc(groupId, window[0], window[1])
             .stream()
             .map(this::toHistoryEntry)
             .collect(Collectors.toList());
@@ -134,5 +145,27 @@ public class ReportServiceImpl implements ReportService {
         if (!isMember) {
             throw new ForbiddenOperationException("You are not a member of this group");
         }
+    }
+
+    /**
+     * Guards report calls with a minimal shared validation contract.
+     */
+    private void requireReportInput(Long groupId) {
+        if (groupId == null) {
+            throw new BadRequestException("Group id is required");
+        }
+    }
+
+    /**
+     * Normalizes a date window and rejects invalid ranges early to keep report behavior deterministic.
+     */
+    private Instant[] normalizeWindow(Instant from, Instant to) {
+        if (from == null || to == null) {
+            throw new BadRequestException("Both from and to are required");
+        }
+        if (from.isAfter(to)) {
+            throw new BadRequestException("from must be earlier than or equal to to");
+        }
+        return Arrays.copyOf(new Instant[] { from, to }, 2);
     }
 }

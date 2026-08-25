@@ -60,12 +60,14 @@ public class RecommendationServiceImpl implements RecommendationService {
     @Override
     @Transactional(readOnly = true)
     public List<RecommendationDTO> getRecommendations(Long currentUserId, Long groupId) {
+        requireGroupId(groupId);
         requireMember(groupId, currentUserId);
         return buildRecommendations(groupId);
     }
 
     @Override
     public RebuildResultDTO rebuildFromRecommendations(Long currentUserId, Long groupId, RebuildRequestDTO request) {
+        requireGroupId(groupId);
         requireMember(groupId, currentUserId);
         if (request == null || request.getItemNames() == null || request.getItemNames().isEmpty()) {
             throw new BadRequestException("At least one item name is required");
@@ -142,7 +144,11 @@ public class RecommendationServiceImpl implements RecommendationService {
         return rows.stream()
             .filter(row -> !alreadyOnList.contains(((String) row[0]).toLowerCase(Locale.ROOT)))
             .map(row -> toRecommendationDTO(row, since, now))
-            .sorted((a, b) -> Integer.compare(b.getFrequency(), a.getFrequency()))
+            // Stable ordering improves API predictability when frequencies tie.
+            .sorted((a, b) -> {
+                int byFrequency = Integer.compare(b.getFrequency(), a.getFrequency());
+                return byFrequency != 0 ? byFrequency : a.getItemName().compareToIgnoreCase(b.getItemName());
+            })
             .limit(MAX_RECOMMENDATIONS)
             .collect(Collectors.toList());
     }
@@ -202,6 +208,12 @@ public class RecommendationServiceImpl implements RecommendationService {
             .existsByShoppingGroup_IdAndUser_IdAndStatus(groupId, userId, STATUS_ACCEPTED);
         if (!isMember) {
             throw new ForbiddenOperationException("You are not a member of this group");
+        }
+    }
+
+    private void requireGroupId(Long groupId) {
+        if (groupId == null) {
+            throw new BadRequestException("Group id is required");
         }
     }
 }
