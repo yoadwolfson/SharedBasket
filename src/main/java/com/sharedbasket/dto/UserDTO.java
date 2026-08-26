@@ -1,6 +1,8 @@
 package com.sharedbasket.dto;
 
 import java.io.Serializable;
+
+/** Safe user view shared by REST and JSF; it intentionally contains no password data. */
 public class UserDTO implements Serializable {
     
     private static final long serialVersionUID = 1L;

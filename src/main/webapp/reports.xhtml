@@ -9,10 +9,24 @@
 <ui:composition template="/WEB-INF/templates/layouts/base-layout.xhtml">
     <ui:param name="pageTitle" value="Reports - Shared Basket" />
 
+    <ui:define name="additionalStyles">
+        <h:outputStylesheet library="css" name="reports.css" />
+    </ui:define>
+
     <ui:define name="content">
         <div class="sb-reports-container">
-            <h2 class="sb-page-title">Reports &amp; Statistics</h2>
-            <p class="sb-groups-intro">Spending totals, category and product breakdowns, and purchase history for the last 30 days.</p>
+            <div class="sb-reports-header">
+                <div>
+                    <span class="sb-reports-eyebrow">Group overview</span>
+                    <h2 class="sb-page-title">Reports &amp; Statistics</h2>
+                    <p class="sb-reports-intro">Spending totals, category and product breakdowns, and purchase history for the last 30 days.</p>
+                </div>
+                <h:form id="reportsForm">
+                    <h:commandButton value="Refresh" action="#{reportsController.reloadReports}" styleClass="sb-btn sb-btn-primary sb-reports-refresh">
+                        <f:ajax execute="@form" render=":reportsAlertsPanel :reportsContentPanel" />
+                    </h:commandButton>
+                </h:form>
+            </div>
 
             <h:panelGroup id="reportsAlertsPanel" layout="block">
                 <ui:repeat value="#{reportsController.alerts}" var="alert">
@@ -22,18 +36,12 @@
                 </ui:repeat>
             </h:panelGroup>
 
-            <h:form id="reportsForm">
-                <h:commandButton value="Refresh" action="#{reportsController.reloadReports}" styleClass="sb-btn sb-btn-primary">
-                    <f:ajax execute="@form" render=":reportsAlertsPanel :reportsContentPanel" />
-                </h:commandButton>
-            </h:form>
-
             <h:panelGroup id="reportsContentPanel" layout="block">
                 <h:panelGroup layout="block" rendered="#{empty reportsController.statistics and empty reportsController.alerts}">
                     <p class="sb-placeholder-text">Loading statistics...</p>
                 </h:panelGroup>
 
-                <h:panelGroup layout="block" rendered="#{not empty reportsController.statistics}" styleClass="sb-stats-grid">
+                <h:panelGroup layout="block" rendered="#{not empty reportsController.statistics}" styleClass="sb-stats-grid sb-reports-summary">
                     <div class="sb-stat-item">
                         <span class="sb-stat-label">Total Cost</span>
                         <span class="sb-stat-value">₪#{reportsController.statistics.totalCost}</span>
@@ -44,56 +52,65 @@
                     </div>
                 </h:panelGroup>
 
-                <h3 class="sb-widget-title">Spending by Category</h3>
-                <h:panelGroup layout="block" rendered="#{empty reportsController.spendingByCategory}">
-                    <p class="sb-placeholder-text">No category spending recorded in this period.</p>
-                </h:panelGroup>
-                <h:panelGroup layout="block" rendered="#{not empty reportsController.spendingByCategory}">
-                    <table class="sb-report-table">
-                        <thead>
-                            <tr><th>Category</th><th>Amount</th><th>Quantity</th><th>% of Total</th></tr>
-                        </thead>
-                        <tbody>
-                            <ui:repeat var="row" value="#{reportsController.spendingByCategory}">
-                                <tr>
-                                    <td>#{row.categoryName}</td>
-                                    <td>₪#{row.amount}</td>
-                                    <td>#{row.quantity}</td>
-                                    <td>#{row.percentageOfTotal}%</td>
-                                </tr>
-                            </ui:repeat>
-                        </tbody>
-                    </table>
-                </h:panelGroup>
+                <div class="sb-reports-grid">
+                    <section class="sb-report-section">
+                        <h3 class="sb-report-section-title">Spending by Category</h3>
+                        <p class="sb-report-section-caption">See which categories drive group spending.</p>
+                        <h:panelGroup layout="block" rendered="#{empty reportsController.spendingByCategory}">
+                            <p class="sb-placeholder-text">No category spending recorded in this period.</p>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" rendered="#{not empty reportsController.spendingByCategory}" styleClass="sb-report-table-wrap">
+                            <table class="sb-report-table">
+                                <thead>
+                                    <tr><th>Category</th><th>Amount</th><th>Quantity</th><th>% of Total</th></tr>
+                                </thead>
+                                <tbody>
+                                    <ui:repeat var="row" value="#{reportsController.spendingByCategory}">
+                                        <tr>
+                                            <td>#{row.categoryName}</td>
+                                            <td>₪#{row.amount}</td>
+                                            <td>#{row.quantity}</td>
+                                            <td>#{row.percentageOfTotal}%</td>
+                                        </tr>
+                                    </ui:repeat>
+                                </tbody>
+                            </table>
+                        </h:panelGroup>
+                    </section>
 
-                <h3 class="sb-widget-title">Spending by Product</h3>
-                <h:panelGroup layout="block" rendered="#{empty reportsController.spendingByProduct}">
-                    <p class="sb-placeholder-text">No product spending recorded in this period.</p>
-                </h:panelGroup>
-                <h:panelGroup layout="block" rendered="#{not empty reportsController.spendingByProduct}">
-                    <table class="sb-report-table">
-                        <thead>
-                            <tr><th>Product</th><th>Amount</th><th>Quantity</th><th>% of Total</th></tr>
-                        </thead>
-                        <tbody>
-                            <ui:repeat var="row" value="#{reportsController.spendingByProduct}">
-                                <tr>
-                                    <td>#{row.productName}</td>
-                                    <td>₪#{row.amount}</td>
-                                    <td>#{row.quantity}</td>
-                                    <td>#{row.percentageOfTotal}%</td>
-                                </tr>
-                            </ui:repeat>
-                        </tbody>
-                    </table>
-                </h:panelGroup>
+                    <section class="sb-report-section">
+                        <h3 class="sb-report-section-title">Spending by Product</h3>
+                        <p class="sb-report-section-caption">Compare the items purchased most often.</p>
+                        <h:panelGroup layout="block" rendered="#{empty reportsController.spendingByProduct}">
+                            <p class="sb-placeholder-text">No product spending recorded in this period.</p>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" rendered="#{not empty reportsController.spendingByProduct}" styleClass="sb-report-table-wrap">
+                            <table class="sb-report-table">
+                                <thead>
+                                    <tr><th>Product</th><th>Amount</th><th>Quantity</th><th>% of Total</th></tr>
+                                </thead>
+                                <tbody>
+                                    <ui:repeat var="row" value="#{reportsController.spendingByProduct}">
+                                        <tr>
+                                            <td>#{row.productName}</td>
+                                            <td>₪#{row.amount}</td>
+                                            <td>#{row.quantity}</td>
+                                            <td>#{row.percentageOfTotal}%</td>
+                                        </tr>
+                                    </ui:repeat>
+                                </tbody>
+                            </table>
+                        </h:panelGroup>
+                    </section>
 
-                <h3 class="sb-widget-title">Purchase History</h3>
-                <h:panelGroup layout="block" rendered="#{empty reportsController.purchaseHistory}">
-                    <p class="sb-placeholder-text">No purchases recorded in this period.</p>
-                </h:panelGroup>
-                <h:panelGroup layout="block" rendered="#{not empty reportsController.purchaseHistory}">
-                    <table class="sb-report-table">
+                    <section class="sb-report-section sb-report-section-wide">
+                        <h3 class="sb-report-section-title">Purchase History</h3>
+                        <p class="sb-report-section-caption">A detailed record of purchases made during this period.</p>
+                        <h:panelGroup layout="block" rendered="#{empty reportsController.purchaseHistory}">
+                            <p class="sb-placeholder-text">No purchases recorded in this period.</p>
+                        </h:panelGroup>
+                        <h:panelGroup layout="block" rendered="#{not empty reportsController.purchaseHistory}" styleClass="sb-report-table-wrap">
+                            <table class="sb-report-table">
                         <thead>
                             <tr><th>Item</th><th>Category</th><th>Quantity</th><th>Price Paid</th><th>Purchased At</th><th>Purchased By</th></tr>
                         </thead>
@@ -109,8 +126,10 @@
                                 </tr>
                             </ui:repeat>
                         </tbody>
-                    </table>
-                </h:panelGroup>
+                            </table>
+                        </h:panelGroup>
+                    </section>
+                </div>
             </h:panelGroup>
         </div>
     </ui:define>

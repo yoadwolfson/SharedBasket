@@ -27,6 +27,7 @@ public class Category {
 	private Boolean archived = Boolean.FALSE;
 
 	@Version
+	// Category edits participate in the same optimistic-locking contract as shopping items.
 	@Column(nullable = false)
 	private Long version = 0L;
 

@@ -65,6 +65,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
 
     @Override
     public ShoppingItemDTO createItem(Long currentUserId, Long groupId, CreateShoppingItemRequestDTO request) {
+        // New items always start unpurchased; purchase history is created only by the transition below.
         requireAdmin(currentUserId, groupId);
         if (request == null) {
             throw new BadRequestException("Request body is required");
@@ -92,6 +93,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
     @Override
     @Transactional(readOnly = true)
     public List<ShoppingItemDTO> listItems(Long currentUserId, Long groupId, Boolean purchased) {
+        // The explicit filters keep the list predictable for both the shopping page and reports.
         requireMember(currentUserId, groupId);
         List<ShoppingItem> items;
         if (Boolean.TRUE.equals(purchased)) {
@@ -106,6 +108,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
 
     @Override
     public ShoppingItemDTO updateItem(Long currentUserId, Long groupId, Long itemId, UpdateShoppingItemRequestDTO request) {
+        // The version check must happen before any field is changed, otherwise stale edits could overwrite newer data.
         requireAdmin(currentUserId, groupId);
         if (request == null) {
             throw new BadRequestException("Request body is required");
@@ -135,6 +138,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
 
     @Override
     public ShoppingItemDTO togglePurchased(Long currentUserId, Long groupId, Long itemId, Long version, boolean purchased) {
+        // Any accepted member may mark an item, but the version still protects the shared list from stale clients.
         requireMember(currentUserId, groupId);
         ShoppingItem item = getItem(groupId, itemId);
         requireVersion(item.getVersion(), version);
@@ -198,6 +202,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
     }
 
     private ShoppingItemDTO saveWithConflict(ShoppingItem item) {
+        // Flush now so Hibernate detects a stale @Version value before the response is returned.
         try {
             return toDto(itemRepository.saveAndFlush(item));
         } catch (ObjectOptimisticLockingFailureException | OptimisticLockException ex) {
@@ -214,6 +219,7 @@ public class ShoppingItemServiceImpl implements ShoppingItemService {
     }
 
     private void requireAdmin(Long userId, Long groupId) {
+        // Reading and marking an item are member operations; direct edits and deletion are admin operations.
         GroupMember membership = requireMember(userId, groupId);
         if (!ADMIN.equals(membership.getRole())) {
             throw new ForbiddenOperationException("Admin access is required for direct item changes");

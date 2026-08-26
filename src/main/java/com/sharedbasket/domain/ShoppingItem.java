@@ -36,6 +36,7 @@ public class ShoppingItem {
 	private Boolean purchased = Boolean.FALSE;
 
 	@Version
+	// Hibernate increments this value on each update so stale clients cannot silently overwrite changes.
 	@Column(nullable = false)
 	private Long version = 0L;
 

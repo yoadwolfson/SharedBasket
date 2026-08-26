@@ -42,6 +42,8 @@ public class CookieAuthenticationService implements AuthenticationService {
 
     @Override
     public UserDTO getCurrentUser() {
+        // JSF and REST requests can establish identity through different contexts, so session
+        // state is checked first and Spring Security is used as the fallback.
         User user = null;
         HttpServletRequest request = getCurrentRequest();
         if (request != null) {
@@ -86,10 +88,13 @@ public class CookieAuthenticationService implements AuthenticationService {
         if (userId == null) {
             return;
         }
-        // TODO: Placeholder for future admin/session revocation logic.
+        // Sessions are currently invalidated only by the current user's logout flow; centralized
+        // revocation for all sessions belonging to this user is not implemented yet.
     }
 
     public User authenticate(String email, String password) {
+        // Returning the same null result for an unknown user and a bad password avoids revealing
+        // which email addresses are registered.
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null || !Boolean.TRUE.equals(user.getEnabled())) {
             return null;
@@ -117,6 +122,7 @@ public class CookieAuthenticationService implements AuthenticationService {
     }
 
     public void attachSession(HttpServletRequest request, User user) {
+        // Store only the user identity in the session; the password and password hash never enter it.
         HttpSession session = request.getSession(true);
         session.setAttribute(AUTHENTICATED_USER_ID, user.getId());
         session.setAttribute(AUTHENTICATED_USER_EMAIL, user.getEmail());
@@ -174,6 +180,7 @@ public class CookieAuthenticationService implements AuthenticationService {
     }
 
     private void bindAuthentication(HttpServletRequest request, User user) {
+        // Spring Security needs the same identity that the JSF session uses for protected REST calls.
         Authentication authentication = new UsernamePasswordAuthenticationToken(
             user.getEmail(),
             null,

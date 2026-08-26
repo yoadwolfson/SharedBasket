@@ -42,6 +42,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(readOnly = true)
     public List<CategoryDTO> listCategories(Long currentUserId, Long groupId, boolean includeArchived) {
+        // Archived categories stay hidden by default so old data does not appear in new item forms.
         requireAcceptedMember(currentUserId, groupId);
         List<Category> categories = includeArchived
             ? categoryRepository.findByShoppingGroup_IdOrderByNameAsc(groupId)
@@ -51,6 +52,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void seedDefaultCategories(Long groupId) {
+        // Seeding is idempotent: groups can be initialized more than once without duplicate rows.
         SbGroup group = getGroup(groupId);
         Set<String> existing = categoryRepository.findByShoppingGroup_Id(groupId).stream()
             .filter(category -> category.getName() != null)
@@ -73,6 +75,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     private GroupMember requireAcceptedMember(Long userId, Long groupId) {
+        // Keep membership enforcement in the service so REST and JSF callers follow the same rule.
         if (userId == null || groupId == null) {
             throw new BadRequestException("User id and group id are required");
         }

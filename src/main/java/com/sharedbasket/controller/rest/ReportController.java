@@ -33,6 +33,11 @@ public class ReportController {
 
     /**
      * Returns top-level spend and purchase counts for a group within a time window.
+        *
+        * @param groupId group whose purchases should be summarized
+        * @param from optional start of the reporting window
+        * @param to optional end of the reporting window
+        * @return summary statistics for the resolved reporting window
      */
     @GetMapping("/statistics")
     public StatisticsDTO getStatistics(
@@ -44,6 +49,11 @@ public class ReportController {
 
     /**
      * Returns aggregated spending grouped by category for the selected group and period.
+        *
+        * @param groupId group whose purchases should be grouped
+        * @param from optional start of the reporting window
+        * @param to optional end of the reporting window
+        * @return spending totals grouped by category
      */
     @GetMapping("/spending-by-category")
     public List<SpendingByCategoryDTO> getSpendingByCategory(
@@ -55,6 +65,11 @@ public class ReportController {
 
     /**
      * Returns aggregated spending grouped by product for the selected group and period.
+        *
+        * @param groupId group whose purchases should be grouped
+        * @param from optional start of the reporting window
+        * @param to optional end of the reporting window
+        * @return spending totals grouped by product
      */
     @GetMapping("/spending-by-product")
     public List<SpendingByProductDTO> getSpendingByProduct(
@@ -66,6 +81,11 @@ public class ReportController {
 
     /**
      * Returns detailed purchase history rows for timeline and auditing views.
+        *
+        * @param groupId group whose purchase history should be returned
+        * @param from optional start of the reporting window
+        * @param to optional end of the reporting window
+        * @return purchase history ordered from newest to oldest
      */
     @GetMapping("/purchase-history")
     public List<PurchaseHistoryEntryDTO> getPurchaseHistory(
@@ -76,6 +96,7 @@ public class ReportController {
     }
 
     private Instant resolveFrom(Instant from) {
+        // Keeping the default window at the API boundary gives every report endpoint the same period.
         return from != null ? from : Instant.now().minus(DEFAULT_LOOKBACK_DAYS, ChronoUnit.DAYS);
     }
 
@@ -84,6 +105,7 @@ public class ReportController {
     }
 
     private Long getCurrentUserId() {
+        // Services receive an explicit user id so authorization remains testable and independent of HTTP details.
         if (authenticationService == null
                 || authenticationService.getCurrentUser() == null
                 || authenticationService.getCurrentUser().getId() == null) {

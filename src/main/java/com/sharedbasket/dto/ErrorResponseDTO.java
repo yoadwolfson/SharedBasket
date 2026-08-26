@@ -3,6 +3,7 @@ package com.sharedbasket.dto;
 import java.io.Serializable;
 import java.util.List;
 
+/** Stable error payload used by REST responses and the JSF field-message renderer. */
 public class ErrorResponseDTO implements Serializable {
     
     private static final long serialVersionUID = 1L;

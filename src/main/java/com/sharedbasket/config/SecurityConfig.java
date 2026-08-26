@@ -14,6 +14,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // The application uses its own REST login flow, so form login is disabled while
+        // authenticated requests still use the HTTP session created by that flow.
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
@@ -44,6 +46,7 @@ public class SecurityConfig {
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                // Rotate the session identifier after login to prevent session fixation.
                 .sessionFixation(sessionFixation -> sessionFixation.changeSessionId())
             )
             .csrf(csrf -> csrf.disable())

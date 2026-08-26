@@ -13,10 +13,10 @@ import java.time.Instant;
 /**
  * Development-only authentication fallback.
  *
- * This allows frontend and feature work to run before the real auth module
- * is integrated by Developer A.
+ * This remains available only under the dev profile for local UI work that
+ * does not need a real login session. It must not be enabled in production.
  */
-//@Service TODO: Uncomment this when Developer A's auth module is integrated
+// Intentionally not a Spring service: CookieAuthenticationService is the production implementation.
 @Primary
 @Profile("dev")
 public class DevAuthenticationService implements AuthenticationService {
