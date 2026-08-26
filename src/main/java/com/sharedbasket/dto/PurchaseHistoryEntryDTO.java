@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
+/** Read-only presentation data created from an immutable purchase-history snapshot. */
 public class PurchaseHistoryEntryDTO implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final DateTimeFormatter DISPLAY_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yy HH:mm")

@@ -10,6 +10,7 @@ public class PasswordConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+        // BCrypt stores a one-way password hash; the original password is never persisted.
         return new BCryptPasswordEncoder();
     }
 }

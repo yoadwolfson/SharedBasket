@@ -15,6 +15,7 @@ public class ErrorHandlingUtil {
      * @param context FacesContext for adding messages
      */
     public static void processErrorResponse(ErrorResponseDTO errorResponse, FacesContext context) {
+        // A backend response can contain both a page-level message and field-specific messages.
         if (errorResponse == null) {
             return;
         }
@@ -114,10 +115,9 @@ public class ErrorHandlingUtil {
      * @param context FacesContext for clearing messages
      */
     public static void clearMessages(FacesContext context) {
-        context.getMessages().forEachRemaining(message -> {
-            // Messages are cleared by creating a new FacesContext or by iterating
-            // This is a simplified approach; consider using a message manager
-        });
+        // FacesContext does not expose a supported clear operation here; callers should use a new
+        // request or manage message lifetime through the JSF lifecycle.
+        context.getMessages().forEachRemaining(message -> { });
     }
     
     /**

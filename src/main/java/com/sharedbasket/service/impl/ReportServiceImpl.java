@@ -37,6 +37,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public StatisticsDTO getStatistics(Long currentUserId, Long groupId, Instant from, Instant to) {
+        // Reports read immutable purchase snapshots so later item edits cannot change historical totals.
         requireReportInput(groupId);
         Instant[] window = normalizeWindow(from, to);
         requireMember(groupId, currentUserId);
@@ -127,6 +128,7 @@ public class ReportServiceImpl implements ReportService {
      * @return The percentage of the amount from the total.
      */
     private double percentageOf(BigDecimal amount, BigDecimal total) {
+        // An empty period has no meaningful denominator, so its percentages are reported as zero.
         if (total == null || total.compareTo(BigDecimal.ZERO) == 0) {
             return 0d;
         }

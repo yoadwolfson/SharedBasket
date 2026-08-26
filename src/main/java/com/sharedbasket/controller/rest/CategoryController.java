@@ -24,6 +24,13 @@ public class CategoryController {
         this.authenticationService = authenticationService;
     }
 
+    /**
+     * Lists categories visible to an accepted member of the selected group.
+     *
+     * @param groupId group whose categories should be returned
+     * @param includeArchived whether archived categories should also be included
+     * @return categories ordered by name
+     */
     @GetMapping
     public List<CategoryDTO> list(@PathVariable Long groupId,
                                   @RequestParam(defaultValue = "false") boolean includeArchived) {

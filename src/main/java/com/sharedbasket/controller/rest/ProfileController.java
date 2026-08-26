@@ -30,6 +30,11 @@ public class ProfileController {
         this.authenticationService = authenticationService;
     }
 
+    /**
+     * Loads the profile for the authenticated session user.
+     *
+     * @return the public profile view
+     */
     @GetMapping
     public ResponseEntity<UserDTO> getProfile() {
         UserDTO currentUser = authenticationService.getCurrentUser();
@@ -41,6 +46,12 @@ public class ProfileController {
         return ResponseEntity.ok(UserViewMapper.toUserDto(user, "MEMBER"));
     }
 
+    /**
+     * Updates editable profile fields for the authenticated session user.
+     *
+     * @param request validated profile values
+     * @return the updated public profile view
+     */
     @PutMapping
     public ResponseEntity<UserDTO> updateProfile(@Valid @RequestBody ProfileUpdateRequestDTO request) {
         UserDTO currentUser = authenticationService.getCurrentUser();

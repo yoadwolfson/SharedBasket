@@ -32,18 +32,40 @@ public class ShoppingItemController {
         this.authenticationService = authenticationService;
     }
 
+    /**
+     * Creates a shopping item for the selected group.
+     *
+     * @param groupId group that will own the item
+     * @param request item values to validate and save
+     * @return the created item
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ShoppingItemDTO create(@PathVariable Long groupId, @RequestBody CreateShoppingItemRequestDTO request) {
         return shoppingItemService.createItem(getCurrentUserId(), groupId, request);
     }
 
+    /**
+     * Lists shopping items, optionally filtered by purchased state.
+     *
+     * @param groupId group whose items should be returned
+     * @param purchased true for purchased items, false for unpurchased items, or null for all
+     * @return matching items
+     */
     @GetMapping
     public List<ShoppingItemDTO> list(@PathVariable Long groupId,
                                       @RequestParam(required = false) Boolean purchased) {
         return shoppingItemService.listItems(getCurrentUserId(), groupId, purchased);
     }
 
+    /**
+     * Applies a version-checked update to a shopping item.
+     *
+     * @param groupId group containing the item
+     * @param itemId item to update
+     * @param request fields to update and the expected item version
+     * @return the updated item
+     */
     @PutMapping("/{itemId}")
     public ShoppingItemDTO update(@PathVariable Long groupId,
                                   @PathVariable Long itemId,
@@ -51,6 +73,14 @@ public class ShoppingItemController {
         return shoppingItemService.updateItem(getCurrentUserId(), groupId, itemId, request);
     }
 
+    /**
+     * Marks an item purchased and records its purchase snapshot when state changes.
+     *
+     * @param groupId group containing the item
+     * @param itemId item to mark purchased
+     * @param request request containing the expected item version
+     * @return the updated item
+     */
     @PostMapping("/{itemId}/mark-purchased")
     public ShoppingItemDTO markPurchased(@PathVariable Long groupId,
                                           @PathVariable Long itemId,
@@ -59,6 +89,14 @@ public class ShoppingItemController {
             request == null ? null : request.getVersion(), true);
     }
 
+    /**
+     * Reverses an item's purchased state using the caller's expected item version.
+     *
+     * @param groupId group containing the item
+     * @param itemId item to mark unpurchased
+     * @param request request containing the expected item version
+     * @return the updated item
+     */
     @PostMapping("/{itemId}/mark-unpurchased")
     public ShoppingItemDTO markUnpurchased(@PathVariable Long groupId,
                                             @PathVariable Long itemId,
@@ -67,6 +105,12 @@ public class ShoppingItemController {
             request == null ? null : request.getVersion(), false);
     }
 
+    /**
+     * Deletes an item from the selected group.
+     *
+     * @param groupId group containing the item
+     * @param itemId item to delete
+     */
     @DeleteMapping("/{itemId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long groupId, @PathVariable Long itemId) {

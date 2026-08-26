@@ -13,6 +13,13 @@ public final class QuantityNormalizer {
     private QuantityNormalizer() {
     }
 
+    /**
+     * Rounds a quantity to the unit's scale and applies its minimum value when needed.
+     *
+     * @param quantity quantity supplied by the caller, or null for the unit default
+     * @param unit unit that determines scale and minimum quantity
+     * @return normalized quantity ready for validation and persistence
+     */
     public static BigDecimal normalize(BigDecimal quantity, ItemUnit unit) {
         ItemUnit resolved = unit == null ? ItemUnit.PIECE : unit;
         if (quantity == null) {
@@ -24,6 +31,12 @@ public final class QuantityNormalizer {
         return scaled.compareTo(floor) < 0 ? floor : scaled;
     }
 
+    /**
+     * Checks that a normalized quantity is positive, bounded, and valid for its unit.
+     *
+     * @param quantity quantity to validate
+     * @param unit unit that determines the minimum quantity
+     */
     public static void validate(BigDecimal quantity, ItemUnit unit) {
         ItemUnit resolved = unit == null ? ItemUnit.PIECE : unit;
         if (quantity == null || quantity.signum() <= 0) {

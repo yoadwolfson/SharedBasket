@@ -37,6 +37,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDTO> handleValidation(MethodArgumentNotValidException ex) {
+        // Keep the first message convenient for a banner while returning every field error for form feedback.
         String message = ex.getBindingResult().getFieldErrors().stream()
             .findFirst()
             .map(error -> error.getDefaultMessage())
@@ -57,6 +58,7 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<ErrorResponseDTO> build(HttpStatus status, String message, List<FieldErrorDTO> fieldErrors) {
+        // One response shape lets REST clients and JSF render errors without endpoint-specific parsing.
         ErrorResponseDTO dto = new ErrorResponseDTO(status.value(), status.getReasonPhrase(), message);
         dto.setTimestamp(Instant.now().toString());
         dto.setFieldErrors(fieldErrors);

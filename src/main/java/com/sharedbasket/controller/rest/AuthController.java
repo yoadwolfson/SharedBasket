@@ -36,6 +36,12 @@ public class AuthController {
         this.authenticationService = authenticationService;
     }
 
+    /**
+     * Creates an enabled user after checking that the email and username are available.
+     *
+     * @param request validated registration details
+     * @return the public user view without password data
+     */
     @PostMapping("/register")
     public ResponseEntity<UserDTO> register(@Valid @RequestBody RegisterRequestDTO request) {
         if (userRepository.findByEmail(request.getEmail().trim()).isPresent()) {
@@ -59,6 +65,13 @@ public class AuthController {
         return ResponseEntity.ok(UserViewMapper.toUserDto(user, "MEMBER"));
     }
 
+    /**
+     * Verifies credentials and binds the authenticated user to the current HTTP session.
+     *
+     * @param request validated login credentials
+     * @param servletRequest current request whose session receives the authenticated identity
+     * @return the public user view
+     */
     @PostMapping("/login")
     public ResponseEntity<UserDTO> login(@Valid @RequestBody LoginRequestDTO request, HttpServletRequest servletRequest) {
         User user = authenticationService.authenticate(request.getEmail().trim(), request.getPassword());
@@ -70,6 +83,11 @@ public class AuthController {
         return ResponseEntity.ok(UserViewMapper.toUserDto(user, "MEMBER"));
     }
 
+    /**
+     * Returns the current session user.
+     *
+     * @return the authenticated public user view
+     */
     @GetMapping("/me")
     public ResponseEntity<UserDTO> currentUser() {
         UserDTO currentUser = authenticationService.getCurrentUser();
@@ -79,6 +97,12 @@ public class AuthController {
         return ResponseEntity.ok(currentUser);
     }
 
+    /**
+     * Ends the current session and returns no body on success.
+     *
+     * @param servletRequest current request containing the session to invalidate
+     * @return an empty no-content response
+     */
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest servletRequest) {
         authenticationService.logout(servletRequest);
