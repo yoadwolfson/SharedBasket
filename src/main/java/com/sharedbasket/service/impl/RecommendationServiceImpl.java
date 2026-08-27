@@ -1,8 +1,12 @@
 package com.sharedbasket.service.impl;
 
+import com.sharedbasket.domain.GroupMember;
 import com.sharedbasket.domain.SbGroup;
 import com.sharedbasket.domain.ShoppingItem;
+import com.sharedbasket.domain.ShoppingItemRequestStatus;
+import com.sharedbasket.domain.ShoppingItemRequestType;
 import com.sharedbasket.domain.User;
+import com.sharedbasket.dto.CreateShoppingItemRequestDTO;
 import com.sharedbasket.dto.RebuildRequestDTO;
 import com.sharedbasket.dto.RebuildResultDTO;
 import com.sharedbasket.dto.RecommendationDTO;
@@ -16,6 +20,7 @@ import com.sharedbasket.repo.SbGroupRepository;
 import com.sharedbasket.repo.ShoppingItemRepository;
 import com.sharedbasket.repo.UserRepository;
 import com.sharedbasket.service.RecommendationService;
+import com.sharedbasket.service.ShoppingItemRequestService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +28,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -33,6 +39,7 @@ import java.util.stream.Collectors;
 public class RecommendationServiceImpl implements RecommendationService {
 
     private static final String STATUS_ACCEPTED = "ACCEPTED";
+    private static final String ROLE_ADMIN = "ADMIN";
     private static final int LOOKBACK_DAYS = 90;
     private static final int MAX_RECOMMENDATIONS = 10;
 
@@ -42,19 +49,22 @@ public class RecommendationServiceImpl implements RecommendationService {
     private final CategoryRepository categoryRepository;
     private final SbGroupRepository groupRepository;
     private final UserRepository userRepository;
+    private final ShoppingItemRequestService shoppingItemRequestService;
 
     public RecommendationServiceImpl(PurchaseRecordRepository purchaseRecordRepository,
                                       ShoppingItemRepository shoppingItemRepository,
                                       GroupMemberRepository groupMemberRepository,
                                       CategoryRepository categoryRepository,
                                       SbGroupRepository groupRepository,
-                                      UserRepository userRepository) {
+                                      UserRepository userRepository,
+                                      ShoppingItemRequestService shoppingItemRequestService) {
         this.purchaseRecordRepository = purchaseRecordRepository;
         this.shoppingItemRepository = shoppingItemRepository;
         this.groupMemberRepository = groupMemberRepository;
         this.categoryRepository = categoryRepository;
         this.groupRepository = groupRepository;
         this.userRepository = userRepository;
+        this.shoppingItemRequestService = shoppingItemRequestService;
     }
 
     @Override
@@ -68,10 +78,11 @@ public class RecommendationServiceImpl implements RecommendationService {
     @Override
     public RebuildResultDTO rebuildFromRecommendations(Long currentUserId, Long groupId, RebuildRequestDTO request) {
         requireGroupId(groupId);
-        requireMember(groupId, currentUserId);
+        GroupMember membership = requireMember(groupId, currentUserId);
         if (request == null || request.getItemNames() == null || request.getItemNames().isEmpty()) {
             throw new BadRequestException("At least one item name is required");
         }
+        boolean isAdmin = ROLE_ADMIN.equals(membership.getRole());
 
         SbGroup group = groupRepository.findById(groupId)
             .orElseThrow(() -> new ResourceNotFoundException("Group not found"));
@@ -86,7 +97,15 @@ public class RecommendationServiceImpl implements RecommendationService {
 
         List<RecommendationDTO> recommendations = buildRecommendations(groupId);
 
+        Set<String> pendingAddNames = isAdmin
+            ? Collections.emptySet()
+            : shoppingItemRequestService.listMine(currentUserId, groupId).stream()
+                .filter(r -> r.getType() == ShoppingItemRequestType.ADD && r.getStatus() == ShoppingItemRequestStatus.PENDING)
+                .map(r -> r.getName().toLowerCase(Locale.ROOT))
+                .collect(Collectors.toSet());
+
         int created = 0;
+        int requested = 0;
         int skipped = 0;
         List<String> conflicts = new ArrayList<>();
 
@@ -100,30 +119,52 @@ public class RecommendationServiceImpl implements RecommendationService {
                 conflicts.add(normalized);
                 continue;
             }
+            if (!isAdmin && pendingAddNames.contains(normalized.toLowerCase(Locale.ROOT))) {
+                // A pending request for this item already exists; avoid re-invoking requestAdd,
+                // which would mark this shared transaction rollback-only if it rejected a duplicate.
+                skipped++;
+                conflicts.add(normalized);
+                continue;
+            }
 
             RecommendationDTO match = recommendations.stream()
                 .filter(rec -> rec.getItemName().equalsIgnoreCase(normalized))
                 .findFirst()
                 .orElse(null);
 
-            ShoppingItem item = new ShoppingItem();
-            item.setShoppingGroup(group);
-            item.setName(normalized);
-            item.setQuantity(BigDecimal.ONE);
-            item.setPurchased(Boolean.FALSE);
-            item.setCreatedByUser(currentUser);
-            item.setCreatedAt(Instant.now());
-            item.setUpdatedAt(Instant.now());
-            if (match != null) {
-                item.setEstimatedPrice(match.getEstimatedUnitPrice());
-                categoryRepository.findByShoppingGroup_IdAndName(groupId, match.getCategoryName())
-                    .ifPresent(item::setCategory);
+            if (isAdmin) {
+                ShoppingItem item = new ShoppingItem();
+                item.setShoppingGroup(group);
+                item.setName(normalized);
+                item.setQuantity(BigDecimal.ONE);
+                item.setPurchased(Boolean.FALSE);
+                item.setCreatedByUser(currentUser);
+                item.setCreatedAt(Instant.now());
+                item.setUpdatedAt(Instant.now());
+                if (match != null) {
+                    item.setEstimatedPrice(match.getEstimatedUnitPrice());
+                    categoryRepository.findByShoppingGroup_IdAndName(groupId, match.getCategoryName())
+                        .ifPresent(item::setCategory);
+                }
+                shoppingItemRepository.save(item);
+                created++;
+            } else {
+                // Non-admin members submit a pending add request instead of creating the item directly.
+                CreateShoppingItemRequestDTO addRequest = new CreateShoppingItemRequestDTO();
+                addRequest.setName(normalized);
+                addRequest.setQuantity(BigDecimal.ONE);
+                if (match != null) {
+                    addRequest.setEstimatedPrice(match.getEstimatedUnitPrice());
+                    categoryRepository.findByShoppingGroup_IdAndName(groupId, match.getCategoryName())
+                        .map(com.sharedbasket.domain.Category::getId)
+                        .ifPresent(addRequest::setCategoryId);
+                }
+                shoppingItemRequestService.requestAdd(currentUserId, groupId, addRequest);
+                requested++;
             }
-            shoppingItemRepository.save(item);
-            created++;
         }
 
-        return new RebuildResultDTO(created, skipped, conflicts);
+        return new RebuildResultDTO(created, requested, skipped, conflicts);
     }
     /**
      * Builds a list of recommendations for a given group based on purchase history and current shopping list.
@@ -204,13 +245,12 @@ public class RecommendationServiceImpl implements RecommendationService {
      * Checks if a user is a member of a group and throws a ForbiddenOperationException if not.
      * @param groupId The ID of the group to check membership for
      * @param userId The ID of the user to check membership for
+     * @return the accepted GroupMember
      */
-    private void requireMember(Long groupId, Long userId) {
-        boolean isMember = groupMemberRepository
-            .existsByShoppingGroup_IdAndUser_IdAndStatus(groupId, userId, STATUS_ACCEPTED);
-        if (!isMember) {
-            throw new ForbiddenOperationException("You are not a member of this group");
-        }
+    private GroupMember requireMember(Long groupId, Long userId) {
+        return groupMemberRepository.findByShoppingGroup_IdAndUser_Id(groupId, userId)
+            .filter(member -> STATUS_ACCEPTED.equals(member.getStatus()))
+            .orElseThrow(() -> new ForbiddenOperationException("You are not a member of this group"));
     }
 
     private void requireGroupId(Long groupId) {

@@ -193,12 +193,30 @@ public class RecommendationsController implements Serializable {
                 RebuildResultDTO.class
             );
             RebuildResultDTO result = response.getBody();
-            if (result != null) {
-                addSuccess("Added " + result.getCreatedItemCount() + " item(s) to the shopping list"
-                    + (result.getSkippedItemCount() > 0 ? "; skipped " + result.getSkippedItemCount() + " already on the list" : ""));
-            }
             selectedMap.clear();
             reloadRecommendations();
+            if (result != null) {
+                StringBuilder message = new StringBuilder();
+                if (result.getCreatedItemCount() > 0) {
+                    message.append("Added ").append(result.getCreatedItemCount()).append(" item(s) to the shopping list");
+                }
+                if (result.getRequestedItemCount() > 0) {
+                    if (message.length() > 0) {
+                        message.append("; ");
+                    }
+                    message.append("submitted ").append(result.getRequestedItemCount()).append(" item(s) for admin approval");
+                }
+                if (result.getSkippedItemCount() > 0) {
+                    if (message.length() > 0) {
+                        message.append("; ");
+                    }
+                    message.append("skipped ").append(result.getSkippedItemCount()).append(" already on the list or pending");
+                }
+                if (message.length() == 0) {
+                    message.append("No changes made");
+                }
+                addSuccess(message.toString());
+            }
         } catch (Exception ex) {
             addError(extractErrorMessage(ex));
         }
