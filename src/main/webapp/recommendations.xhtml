@@ -14,6 +14,20 @@
             <h2 class="sb-page-title">Recommendations &amp; Decision Support</h2>
             <p class="sb-groups-intro">Frequently and recently purchased items for your group, ready to add back to the shopping list.</p>
 
+            <h:form id="recGroupSwitcherForm">
+                <h:panelGroup rendered="#{recommendationsController.hasGroups}" layout="block" styleClass="sb-group-switcher">
+                    <h:outputLabel for="recGroupSwitcher" styleClass="sb-form-label" value="Group" />
+                    <h:selectOneMenu id="recGroupSwitcher" value="#{recommendationsController.selectedGroupId}"
+                                     styleClass="sb-form-select">
+                        <f:selectItem itemLabel="Select a group" itemValue="" />
+                        <f:selectItems value="#{recommendationsController.groups}" var="g"
+                                       itemValue="#{g.id}" itemLabel="#{g.name}" />
+                        <f:ajax execute="@this" listener="#{recommendationsController.onGroupChanged}"
+                                render=":recAlertsPanel :recContentPanel" />
+                    </h:selectOneMenu>
+                </h:panelGroup>
+            </h:form>
+
             <h:panelGroup id="recAlertsPanel" layout="block">
                 <ui:repeat value="#{recommendationsController.alerts}" var="alert">
                     <div class="sb-alert sb-alert-#{alert.type}">
@@ -23,11 +37,15 @@
             </h:panelGroup>
 
             <h:panelGroup id="recContentPanel" layout="block">
-                <h:panelGroup layout="block" rendered="#{empty recommendationsController.recommendations and empty recommendationsController.alerts}">
+                <h:panelGroup layout="block" rendered="#{not recommendationsController.groupSelected}">
+                    <p class="sb-placeholder-text">Select a group above to view its recommendations.</p>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" rendered="#{recommendationsController.groupSelected and empty recommendationsController.recommendations and empty recommendationsController.alerts}">
                     <p class="sb-placeholder-text">Loading recommendations...</p>
                 </h:panelGroup>
 
-                <h:panelGroup layout="block" rendered="#{empty recommendationsController.recommendations and not empty recommendationsController.alerts}">
+                <h:panelGroup layout="block" rendered="#{recommendationsController.groupSelected and empty recommendationsController.recommendations and not empty recommendationsController.alerts}">
                     <p class="sb-placeholder-text">No recommendations yet - purchase history will populate this list over time.</p>
                 </h:panelGroup>
 

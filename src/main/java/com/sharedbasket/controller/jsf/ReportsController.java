@@ -1,6 +1,7 @@
 package com.sharedbasket.controller.jsf;
 
 import com.sharedbasket.dto.AlertDTO;
+import com.sharedbasket.dto.GroupDTO;
 import com.sharedbasket.dto.PurchaseHistoryEntryDTO;
 import com.sharedbasket.dto.SpendingByCategoryDTO;
 import com.sharedbasket.dto.SpendingByProductDTO;
@@ -49,6 +50,11 @@ public class ReportsController implements Serializable {
     private List<AlertDTO> alerts;
     private boolean loading;
 
+    private List<GroupDTO> groups;
+    private Long selectedGroupId;
+    private String selectedGroupName;
+    private String selectedGroupRole;
+
     @PostConstruct
     public void init() {
         alerts = new ArrayList<>();
@@ -56,18 +62,89 @@ public class ReportsController implements Serializable {
         spendingByProduct = Collections.emptyList();
         purchaseHistory = Collections.emptyList();
         restTemplate = resolveSpringBean(RestTemplate.class);
+        loadGroups();
+        initSelectedGroup();
+        reloadReports();
+    }
+
+    private void loadGroups() {
+        try {
+            GroupDTO[] loadedGroups = restTemplate.exchange(
+                JsfRestClientSupport.apiBaseUrl("/api/groups"),
+                HttpMethod.GET,
+                new HttpEntity<>(buildJsonHeaders()),
+                GroupDTO[].class
+            ).getBody();
+            groups = loadedGroups == null ? new ArrayList<>() : new ArrayList<>(java.util.Arrays.asList(loadedGroups));
+        } catch (Exception ex) {
+            groups = new ArrayList<>();
+            addError(extractErrorMessage(ex));
+        }
+    }
+
+    /** Defaults the selector to the group already active elsewhere in the app, if any. */
+    private void initSelectedGroup() {
+        Long shellGroupId = resolveGroupId();
+        GroupDTO target = shellGroupId != null ? findGroup(shellGroupId) : null;
+        if (target == null && !groups.isEmpty()) {
+            target = groups.get(0);
+        }
+        if (target != null) {
+            applySelectedGroup(target);
+        }
+    }
+
+    private GroupDTO findGroup(Long groupId) {
+        if (groupId == null || groups == null) {
+            return null;
+        }
+        for (GroupDTO group : groups) {
+            if (groupId.equals(group.getId())) {
+                return group;
+            }
+        }
+        return null;
+    }
+
+    private void applySelectedGroup(GroupDTO selected) {
+        selectedGroupId = selected.getId();
+        selectedGroupName = selected.getName();
+        selectedGroupRole = selected.getMyRole();
+        if (shellController != null) {
+            shellController.setCurrentGroup(selected.getId(), selected.getName());
+        }
+    }
+
+    /** Bound to the group switcher dropdown. */
+    public void onGroupChanged() {
+        alerts.clear();
+        if (selectedGroupId == null) {
+            selectedGroupName = null;
+            selectedGroupRole = null;
+            statistics = null;
+            spendingByCategory = Collections.emptyList();
+            spendingByProduct = Collections.emptyList();
+            purchaseHistory = Collections.emptyList();
+            return;
+        }
+        GroupDTO selected = findGroup(selectedGroupId);
+        if (selected == null) {
+            addError("Select a group you belong to");
+            return;
+        }
+        applySelectedGroup(selected);
         reloadReports();
     }
 
     /**
-     * Reloads all report sections for the current group.
+     * Reloads all report sections for the currently selected group.
      */
     public void reloadReports() {
         alerts.clear();
         loading = true;
-        Long groupId = resolveGroupId();
+        Long groupId = selectedGroupId;
         if (groupId == null) {
-            addError("No group available for reporting");
+            addError("Select a group before loading reports");
             loading = false;
             return;
         }
@@ -178,4 +255,13 @@ public class ReportsController implements Serializable {
     public boolean isLoading() { return loading; }
     public ShellController getShellController() { return shellController; }
     public void setShellController(ShellController shellController) { this.shellController = shellController; }
+    public List<GroupDTO> getGroups() { return groups == null ? Collections.emptyList() : groups; }
+    public boolean isHasGroups() { return groups != null && !groups.isEmpty(); }
+    public boolean getHasGroups() { return isHasGroups(); }
+    public boolean isGroupSelected() { return selectedGroupId != null; }
+    public boolean getGroupSelected() { return selectedGroupId != null; }
+    public Long getSelectedGroupId() { return selectedGroupId; }
+    public void setSelectedGroupId(Long selectedGroupId) { this.selectedGroupId = selectedGroupId; }
+    public String getSelectedGroupName() { return selectedGroupName; }
+    public String getSelectedGroupRole() { return selectedGroupRole; }
 }

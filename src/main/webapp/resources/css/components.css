@@ -51,6 +51,28 @@
     background-color: #fff5f5;
 }
 
+.sb-group-switcher {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sb-group-switcher .sb-form-label {
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+
+.sb-group-switcher .sb-form-select {
+    width: auto;
+}
+
+.sb-group-role {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
 /* Buttons */
 .sb-btn {
     display: inline-flex;

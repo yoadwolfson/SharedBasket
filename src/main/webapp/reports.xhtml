@@ -22,6 +22,17 @@
                     <p class="sb-reports-intro">Spending totals, category and product breakdowns, and purchase history for the last 30 days.</p>
                 </div>
                 <h:form id="reportsForm">
+                    <h:panelGroup rendered="#{reportsController.hasGroups}" layout="block" styleClass="sb-group-switcher">
+                        <h:outputLabel for="reportsGroupSwitcher" styleClass="sb-form-label" value="Group" />
+                        <h:selectOneMenu id="reportsGroupSwitcher" value="#{reportsController.selectedGroupId}"
+                                         styleClass="sb-form-select">
+                            <f:selectItem itemLabel="Select a group" itemValue="" />
+                            <f:selectItems value="#{reportsController.groups}" var="g"
+                                           itemValue="#{g.id}" itemLabel="#{g.name}" />
+                            <f:ajax execute="@this" listener="#{reportsController.onGroupChanged}"
+                                    render=":reportsAlertsPanel :reportsContentPanel" />
+                        </h:selectOneMenu>
+                    </h:panelGroup>
                     <h:commandButton value="Refresh" action="#{reportsController.reloadReports}" styleClass="sb-btn sb-btn-primary sb-reports-refresh">
                         <f:ajax execute="@form" render=":reportsAlertsPanel :reportsContentPanel" />
                     </h:commandButton>
@@ -37,7 +48,11 @@
             </h:panelGroup>
 
             <h:panelGroup id="reportsContentPanel" layout="block">
-                <h:panelGroup layout="block" rendered="#{empty reportsController.statistics and empty reportsController.alerts}">
+                <h:panelGroup layout="block" rendered="#{not reportsController.groupSelected}">
+                    <p class="sb-placeholder-text">Select a group above to view its reports.</p>
+                </h:panelGroup>
+
+                <h:panelGroup layout="block" rendered="#{reportsController.groupSelected and empty reportsController.statistics and empty reportsController.alerts}">
                     <p class="sb-placeholder-text">Loading statistics...</p>
                 </h:panelGroup>
 
